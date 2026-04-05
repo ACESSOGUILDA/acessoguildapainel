@@ -2,7 +2,15 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Guilda FF">
+<meta name="theme-color" content="#c8a041">
+<meta name="description" content="Gerenciador de guilda para Final Fantasy">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>⚔️ Guilda Manager FF</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
@@ -63,6 +71,12 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 
 html, body { height: 100%; overflow: hidden; }
+
+/* Safe area for iPhone notch/home indicator */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
 
 body {
   background: var(--bg);
@@ -1188,6 +1202,16 @@ body {
             <div class="theme-preview" style="background:linear-gradient(135deg,#08060f,#9b59b6)"></div>
             <div class="theme-name" style="color:#9b59b6">ABYSS</div>
           </div>
+        </div>
+      </div>
+      <div>
+        <div class="form-label" style="margin-bottom:10px;">📱 Instalar como App</div>
+        <button id="installAppBtn" onclick="installApp()" class="btn btn-primary" style="display:none;width:100%;justify-content:center;padding:14px;font-size:15px;">
+          📲 Instalar Guilda FF no Dispositivo
+        </button>
+        <div style="font-size:12px;color:var(--text3);margin-top:8px;font-style:italic;line-height:1.6;">
+          Se o botão não aparecer: no <strong style="color:var(--text2)">Chrome/Android</strong> — menu ⋮ → "Adicionar à tela inicial". 
+          No <strong style="color:var(--text2)">Safari/iPhone</strong> — botão compartilhar □↑ → "Adicionar à Tela de Início".
         </div>
       </div>
       <div>
@@ -2928,6 +2952,40 @@ document.getElementById('loginGuildCode').addEventListener('keydown', e => { if 
 document.getElementById('loginName').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 document.getElementById('regPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
 document.getElementById('mTagInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addMemberTag(); } });
+
+// ============= PWA — Service Worker & Install Prompt =============
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.warn('SW failed:', err));
+  });
+}
+
+let _deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  // Show install button in settings page
+  const btn = document.getElementById('installAppBtn');
+  if (btn) btn.style.display = 'flex';
+});
+window.addEventListener('appinstalled', () => {
+  _deferredInstallPrompt = null;
+  const btn = document.getElementById('installAppBtn');
+  if (btn) btn.style.display = 'none';
+  toast('✅ App instalado com sucesso!', 'success');
+});
+
+function installApp() {
+  if (_deferredInstallPrompt) {
+    _deferredInstallPrompt.prompt();
+    _deferredInstallPrompt.userChoice.then(r => {
+      if (r.outcome === 'accepted') toast('🎉 Instalando app...', 'success');
+      _deferredInstallPrompt = null;
+    });
+  }
+}
 
 // ============= INIT =============
 setTheme('default', false);

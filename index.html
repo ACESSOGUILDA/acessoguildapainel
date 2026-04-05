@@ -1,0 +1,2957 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚔️ Guilda Manager FF</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+/* ========== THEME SYSTEM ========== */
+:root {
+  --bg:     #0a0c10;
+  --bg2:    #0f1318;
+  --bg3:    #141920;
+  --card:   #161d27;
+  --card2:  #1c2533;
+  --border: #1e2d3d;
+  --border2:#243447;
+  --accent: #c8a041;
+  --accent2:#a07830;
+  --accent3:#f0c060;
+  --blue:   #4a8fa8;
+  --blue2:  #2a6f88;
+  --gold:   #f5c842;
+  --red:    #e04060;
+  --green:  #2ecc71;
+  --text:   #e8dcc8;
+  --text2:  #9a8870;
+  --text3:  #4a3a28;
+  --glow:   0 0 20px rgba(200,160,65,0.3);
+  --shadow: 0 4px 24px rgba(0,0,0,0.6);
+}
+[data-theme="ocean"] {
+  --bg:#050e18;--bg2:#071422;--bg3:#0a1c2e;--card:#0d2035;--card2:#102842;
+  --border:#153558;--border2:#1a4070;--accent:#00b4d8;--accent2:#0090bb;--accent3:#48cae4;
+  --blue:#0077b6;--gold:#f0c060;--red:#e04060;--text:#d0eaf8;--text2:#5a9ab8;--text3:#1a4a68;
+  --glow:0 0 20px rgba(0,180,216,0.3);
+}
+[data-theme="dark"] {
+  --bg:#080808;--bg2:#0d0d0d;--bg3:#111;--card:#141414;--card2:#1a1a1a;
+  --border:#242424;--border2:#2e2e2e;--accent:#e0e0e0;--accent2:#b0b0b0;--accent3:#ffffff;
+  --blue:#888;--gold:#ccc;--red:#e04060;--text:#e0e0e0;--text2:#707070;--text3:#3a3a3a;
+  --glow:0 0 20px rgba(200,200,200,0.2);
+}
+[data-theme="forest"] {
+  --bg:#060d09;--bg2:#0a1410;--bg3:#0f1c15;--card:#122018;--card2:#172820;
+  --border:#1c3828;--border2:#234835;--accent:#4caf78;--accent2:#369060;--accent3:#6fe09a;
+  --blue:#3a8060;--gold:#c8b050;--red:#e04060;--text:#c8e8d0;--text2:#5a9870;--text3:#1a4830;
+  --glow:0 0 20px rgba(76,175,120,0.3);
+}
+[data-theme="abyss"] {
+  --bg:#08060f;--bg2:#0e0b18;--bg3:#120f20;--card:#161228;--card2:#1c1832;
+  --border:#251e3e;--border2:#2e2650;--accent:#9b59b6;--accent2:#7a3d9a;--accent3:#c39bd3;
+  --blue:#7f5af0;--gold:#c8b050;--red:#e04060;--text:#e0d8f0;--text2:#7a68a0;--text3:#3a2860;
+  --glow:0 0 20px rgba(155,89,182,0.3);
+}
+[data-theme="crimson"] {
+  --bg:#100608;--bg2:#18090c;--bg3:#200d10;--card:#241018;--card2:#2c1420;
+  --border:#3e1828;--border2:#501e32;--accent:#e04060;--accent2:#b02840;--accent3:#ff6080;
+  --blue:#c04060;--gold:#f5a623;--red:#ff2040;--text:#f0d8d8;--text2:#a06070;--text3:#602030;
+  --glow:0 0 20px rgba(224,64,96,0.3);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Crimson Pro', Georgia, serif;
+  display: flex;
+  flex-direction: column;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(200,160,65,0.03) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(74,143,168,0.03) 0%, transparent 60%);
+}
+
+/* ========== APP SHELL ========== */
+.app-shell {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ========== SIDEBAR OVERLAY mobile ========== */
+.sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 200;
+  backdrop-filter: blur(2px);
+}
+.sidebar-overlay.show { display: block; }
+
+/* ========== SIDEBAR ========== */
+.sidebar {
+  width: 230px; min-width: 230px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: relative; z-index: 201;
+  overflow-y: auto; overflow-x: hidden;
+  height: 100%;
+  flex-shrink: 0;
+  transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+}
+.sidebar::before {
+  content: '';
+  position: absolute; top: 0; right: 0; bottom: 0; width: 1px;
+  background: linear-gradient(180deg, transparent, var(--accent2), transparent);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.sidebar-logo {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  flex-shrink: 0;
+}
+.logo-emblem { font-size: 32px; margin-bottom: 6px; filter: drop-shadow(0 0 8px var(--accent)); }
+.logo-text {
+  font-family: 'Cinzel', serif;
+  font-size: 16px; font-weight: 900; letter-spacing: 3px;
+  color: var(--accent3); text-shadow: 0 0 20px var(--accent);
+}
+.logo-sub { font-size: 10px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+
+.sidebar-guild {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(90deg, rgba(200,160,65,0.05), transparent);
+  flex-shrink: 0;
+}
+.guild-name {
+  font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--gold);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.guild-abbr { font-size: 11px; color: var(--text3); font-style: italic; }
+
+.sidebar-user {
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer; transition: background 0.2s; flex-shrink: 0;
+}
+.sidebar-user:hover { background: rgba(200,160,65,0.05); }
+.user-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-weight: 700; font-size: 16px;
+  color: var(--bg); flex-shrink: 0;
+  border: 2px solid var(--accent2);
+  box-shadow: 0 0 10px rgba(200,160,65,0.3);
+}
+.user-info { flex:1; min-width:0; }
+.user-name {
+  font-family: 'Cinzel', serif; font-size: 12px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.user-role { font-size: 11px; color: var(--accent); font-style: italic; }
+
+.nav-section {
+  padding: 12px 16px 4px; flex-shrink: 0;
+  font-family: 'Cinzel', serif; font-size: 9px; color: var(--text3);
+  font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px; margin: 1px 8px;
+  border-radius: 6px; cursor: pointer; transition: all 0.2s;
+  color: var(--text2); font-size: 13px; font-weight: 500;
+  user-select: none; border: 1px solid transparent; flex-shrink: 0;
+}
+.nav-item:hover { background: var(--card); color: var(--text); border-color: var(--border); }
+.nav-item.active {
+  background: linear-gradient(90deg, rgba(200,160,65,0.12), rgba(200,160,65,0.03));
+  color: var(--accent3); border-color: var(--border2); border-left: 2px solid var(--accent);
+}
+.nav-icon { width: 20px; text-align: center; font-size: 15px; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; background: var(--accent); color: var(--bg);
+  font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 10px;
+  font-family: 'Share Tech Mono', monospace;
+}
+.sidebar-bottom {
+  margin-top: auto; padding: 8px; border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 2px; flex-shrink: 0;
+}
+
+/* ========== MAIN ========== */
+.main {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+  overflow: hidden; height: 100%;
+}
+.topbar {
+  height: 52px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 16px; gap: 10px;
+  background: var(--bg2); flex-shrink: 0; position: relative;
+}
+.topbar::after {
+  content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent2), transparent); opacity: 0.3;
+}
+.topbar-title {
+  font-family: 'Cinzel', serif; font-size: 15px; font-weight: 700; letter-spacing: 1px;
+  color: var(--accent3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1;
+}
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+/* Hamburger - mobile only */
+.hamburger-btn {
+  display: none; background: none; border: none;
+  color: var(--accent3); font-size: 22px; cursor: pointer;
+  padding: 2px 6px; line-height: 1; flex-shrink: 0;
+}
+
+/* ========== PAGES ========== */
+.page {
+  display: none; flex: 1; min-height: 0;
+  overflow-y: auto; overflow-x: hidden;
+  padding: 20px; flex-direction: column; gap: 18px;
+  -webkit-overflow-scrolling: touch;
+}
+.page.active { display: flex; }
+
+/* ========== BUTTONS ========== */
+.btn {
+  padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer;
+  font-family: 'Crimson Pro', serif; font-size: 13px; font-weight: 600;
+  letter-spacing: 0.5px; transition: all 0.2s;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: var(--bg);
+  box-shadow: 0 2px 12px rgba(200,160,65,0.3);
+  border: 1px solid var(--accent2);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(200,160,65,0.5); }
+.btn-ghost {
+  background: var(--card2); color: var(--text2);
+  border: 1px solid var(--border2);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+.btn-danger {
+  background: rgba(224,64,96,0.12); color: var(--red);
+  border: 1px solid rgba(224,64,96,0.3);
+}
+.btn-danger:hover { background: rgba(224,64,96,0.22); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-xs { padding: 3px 9px; font-size: 11px; }
+
+/* ========== PAGES ========== */
+.page { display:none; flex:1; overflow-y:auto; padding:24px; flex-direction:column; gap:20px; }
+.page.active { display:flex; }
+
+/* ========== SECTION TITLE ========== */
+.section-title {
+  font-family: 'Cinzel', serif; font-size: 15px; font-weight: 700;
+  letter-spacing: 1px; color: var(--accent3);
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title::before, .section-title::after {
+  content: ''; height: 1px; background: linear-gradient(90deg, var(--border2), transparent);
+  flex: 1;
+}
+.section-title::before { background: linear-gradient(270deg, var(--border2), transparent); }
+
+/* ========== HOME PAGE ========== */
+.home-hero {
+  background: linear-gradient(135deg, var(--card) 0%, rgba(200,160,65,0.06) 100%);
+  border: 1px solid var(--border2); border-radius: 14px;
+  padding: 28px 32px; position: relative; overflow: hidden;
+}
+.home-hero::before {
+  content: '⚔️';
+  position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
+  font-size: 80px; opacity: 0.05; pointer-events: none;
+}
+.hero-greeting { font-size: 12px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+.hero-name { font-family: 'Cinzel', serif; font-size: 32px; font-weight: 900; line-height: 1; margin-bottom: 8px; }
+.hero-name span { color: var(--accent3); }
+.hero-sub { color: var(--text2); font-size: 14px; margin-bottom: 20px; font-style: italic; }
+.hero-stats { display: flex; gap: 28px; flex-wrap: wrap; }
+.hero-stat { display: flex; flex-direction: column; gap: 2px; }
+.hero-stat-value { font-family: 'Cinzel', serif; font-size: 26px; font-weight: 700; color: var(--accent3); }
+.hero-stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+
+/* Meta card */
+.meta-card {
+  background: var(--card); border: 1px solid var(--border2);
+  border-radius: 12px; padding: 20px 24px;
+}
+.meta-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.meta-title { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 600; }
+.meta-percent { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700; color: var(--accent3); }
+.meta-progress-bar { width:100%; height:8px; background:var(--bg3); border-radius:4px; overflow:hidden; margin-bottom:8px; }
+.meta-progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--blue)); border-radius:4px; transition:width 0.5s ease; }
+.meta-progress-info { display:flex; justify-content:space-between; font-size:12px; color:var(--text2); }
+.no-meta { text-align:center; padding:30px; color:var(--text3); font-size:14px; font-style:italic; }
+.no-meta a { color:var(--accent); }
+
+/* Info grid */
+.info-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:14px; }
+.info-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px;
+  display: flex; flex-direction: column; gap: 6px;
+  transition: border-color 0.2s;
+}
+.info-card:hover { border-color: var(--border2); }
+.info-card-icon { font-size: 22px; }
+.info-card-value { font-family: 'Cinzel', serif; font-size: 26px; font-weight: 700; color: var(--accent3); }
+.info-card-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; }
+
+/* ========== SHOP SECTION ========== */
+.shop-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px; }
+.shop-item {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; transition: all 0.2s;
+  cursor: default;
+}
+.shop-item:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: var(--shadow); }
+.shop-item-img {
+  width: 100%; height: 140px; object-fit: cover;
+  background: var(--bg3); display: flex; align-items: center;
+  justify-content: center; font-size: 40px; color: var(--text3);
+}
+.shop-item-img img { width:100%; height:100%; object-fit:cover; }
+.shop-item-body { padding: 12px; }
+.shop-item-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.shop-item-price { font-size: 15px; color: var(--gold); font-weight: 600; margin-bottom: 4px; }
+.shop-item-desc { font-size: 12px; color: var(--text2); font-style: italic; }
+.shop-item-actions { display:flex; gap:6px; padding:10px 12px 12px; border-top:1px solid var(--border); margin-top:4px; align-items:center; flex-wrap:wrap; }
+
+/* ========== MEMBERS PAGE ========== */
+.members-toolbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.search-input, .filter-select {
+  background: var(--card); border: 1px solid var(--border2);
+  border-radius: 6px; padding: 8px 12px; color: var(--text);
+  font-family: 'Crimson Pro', serif; font-size: 14px; outline: none;
+  transition: border-color 0.2s;
+}
+.search-input { width: 220px; }
+.search-input::placeholder { color: var(--text3); }
+.search-input:focus, .filter-select:focus { border-color: var(--accent); }
+.filter-select { cursor: pointer; }
+.filter-select option { background: var(--card2); }
+
+.members-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px;
+}
+.member-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px; transition: all 0.2s;
+  position: relative; overflow: hidden;
+}
+.member-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: var(--shadow); }
+.member-card::before {
+  content: ''; position: absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, var(--accent), var(--blue));
+  opacity: 0; transition: opacity 0.2s;
+}
+.member-card:hover::before { opacity: 1; }
+
+.member-card-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+}
+.member-avatar {
+  width: 46px; height: 46px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-weight: 700; font-size: 18px;
+  flex-shrink: 0; border: 2px solid var(--border2);
+}
+.member-card-info { flex:1; min-width:0; }
+.member-card-name { font-family: 'Cinzel', serif; font-weight: 700; font-size: 15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.member-card-id { font-size: 12px; color: var(--text3); font-family: 'Share Tech Mono', monospace; margin-top:2px; }
+.role-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  font-size: 10px; font-family: 'Cinzel', serif; font-weight: 700;
+  letter-spacing: 0.5px; text-transform: uppercase;
+}
+.member-details { display:flex; flex-direction:column; gap:7px; border-top:1px solid var(--border); padding-top:12px; }
+.member-detail-row { display:flex; align-items:flex-start; gap:8px; font-size:13px; }
+.member-detail-label { color:var(--text3); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; width:58px; flex-shrink:0; padding-top:1px; }
+.member-detail-value { color:var(--text2); }
+
+/* Warnings */
+.warnings-row { display:flex; align-items:center; gap:8px; }
+.warning-count {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(224,64,96,0.1); border: 1px solid rgba(224,64,96,0.3);
+  color: var(--red); border-radius: 20px; padding: 2px 10px; font-size: 12px; font-weight: 600;
+}
+.warning-reason-btn {
+  width: 20px; height: 20px; border-radius: 50%; background: rgba(200,160,65,0.15);
+  border: 1px solid rgba(200,160,65,0.3); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 11px; font-weight: 700; transition: all 0.2s;
+}
+.warning-reason-btn:hover { background: rgba(200,160,65,0.3); }
+
+.member-card-actions { display:flex; gap:7px; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+.no-members { text-align:center; padding:60px 20px; color:var(--text3); grid-column:1/-1; }
+.no-members-icon { font-size:40px; margin-bottom:14px; opacity:0.3; }
+.no-members-text { font-family:'Cinzel',serif; font-size:15px; margin-bottom:5px; }
+.no-members-sub { font-size:13px; font-style:italic; }
+
+/* ========== AVISOS PAGE ========== */
+.avisos-list { display:flex; flex-direction:column; gap:12px; }
+.aviso-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 20px; transition: border-color 0.2s;
+}
+.aviso-card:hover { border-color: var(--border2); }
+.aviso-header { display:flex; align-items:flex-start; gap:12px; margin-bottom:10px; }
+.aviso-type-badge {
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 10px; font-family: 'Cinzel', serif; font-weight: 700;
+  flex-shrink: 0; margin-top: 2px;
+}
+.aviso-title { font-family:'Cinzel',serif; font-size:15px; font-weight:700; }
+.aviso-meta { font-size:11px; color:var(--text3); margin-top:3px; }
+.aviso-body { font-size:14px; color:var(--text2); line-height:1.6; font-style:italic; }
+.aviso-actions { display:flex; gap:7px; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+.no-avisos { text-align:center; padding:50px; color:var(--text3); font-style:italic; }
+
+/* ========== META PAGE ========== */
+.meta-config-card {
+  background: var(--card); border: 1px solid var(--border2);
+  border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 18px;
+}
+
+/* ========== SETTINGS PAGE ========== */
+.themes-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; }
+.theme-btn {
+  border-radius: 10px; padding: 16px; cursor: pointer;
+  border: 2px solid transparent; transition: all 0.2s;
+  text-align: center; display: flex; flex-direction: column; gap: 8px; align-items: center;
+}
+.theme-btn:hover { transform: translateY(-2px); }
+.theme-btn.active { border-color: var(--accent); }
+.theme-preview { width: 48px; height: 48px; border-radius: 8px; margin: 0 auto; }
+.theme-name { font-family:'Cinzel',serif; font-size:12px; font-weight:600; letter-spacing:1px; }
+
+/* ========== MODAL ========== */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+  z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+.modal {
+  background: var(--card); border: 1px solid var(--border2);
+  border-radius: 14px; width: 100%; max-width: 500px;
+  max-height: 90vh; overflow-y: auto;
+  animation: slideUp 0.25s ease;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+  position: relative;
+}
+.modal::before {
+  content: ''; position: absolute; top: 0; left: 20px; right: 20px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+}
+.modal-lg { max-width: 620px; }
+.modal-sm { max-width: 400px; }
+
+.modal-header {
+  padding: 22px 26px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-title { font-family:'Cinzel',serif; font-size:18px; font-weight:700; color:var(--accent3); letter-spacing:0.5px; }
+.modal-close {
+  background: none; border: none; color: var(--text3);
+  font-size: 18px; cursor: pointer; padding: 4px; line-height: 1; transition: color 0.2s;
+}
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 22px 26px; display: flex; flex-direction: column; gap: 15px; }
+.modal-footer { padding: 16px 26px 22px; display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid var(--border); }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label {
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 1px;
+  font-family: 'Cinzel', serif;
+}
+.form-input, .form-select, .form-textarea {
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 6px; padding: 9px 13px; color: var(--text);
+  font-family: 'Crimson Pro', serif; font-size: 14px; outline: none;
+  transition: border-color 0.2s; width: 100%;
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--text3); }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-select { cursor: pointer; }
+.form-select option { background: var(--card2); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+.form-hint { font-size: 11px; color: var(--text3); font-style: italic; }
+
+/* ========== LOGIN SCREEN ========== */
+#loginScreen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  background-image: 
+    radial-gradient(ellipse at 50% 0%, rgba(200,160,65,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 0% 100%, rgba(74,143,168,0.05) 0%, transparent 50%);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Crimson Pro', serif;
+}
+.login-container {
+  width: 420px; max-width: 95vw;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 20px; overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+  position: relative;
+}
+.login-container::before {
+  content: ''; position: absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+.login-header {
+  padding: 32px; text-align: center;
+  background: linear-gradient(180deg, rgba(200,160,65,0.06), transparent);
+  border-bottom: 1px solid var(--border);
+}
+.login-emblem { font-size: 48px; margin-bottom: 8px; filter: drop-shadow(0 0 12px var(--accent)); }
+.login-title { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 900; color: var(--accent3); letter-spacing: 3px; }
+.login-sub { font-size: 12px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+.login-body { padding: 28px 32px; display: flex; flex-direction: column; gap: 14px; }
+.login-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+.login-tab {
+  flex: 1; padding: 10px; text-align: center; cursor: pointer;
+  font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700;
+  color: var(--text3); letter-spacing: 1px; transition: all 0.2s;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.login-tab.active { color: var(--accent3); border-bottom-color: var(--accent); }
+.login-panel { display: none; flex-direction: column; gap: 14px; }
+.login-panel.active { display: flex; }
+.login-btn {
+  width: 100%; padding: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: var(--bg); border: none; border-radius: 8px; cursor: pointer;
+  font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700;
+  letter-spacing: 1px; transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(200,160,65,0.3);
+}
+.login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(200,160,65,0.5); }
+.login-error { font-size: 13px; color: var(--red); text-align: center; background: rgba(224,64,96,0.08); border: 1px solid rgba(224,64,96,0.2); border-radius: 6px; padding: 8px; display: none; }
+.login-error.show { display: block; }
+.login-success { font-size: 13px; color: var(--green); text-align: center; background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2); border-radius: 6px; padding: 8px; display: none; }
+.login-success.show { display: block; }
+
+/* ========== TOAST ========== */
+.toast-container { position:fixed; bottom:20px; right:20px; display:flex; flex-direction:column; gap:8px; z-index:2000; }
+.toast {
+  background: var(--card2); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 10px 16px; font-size: 13px;
+  display: flex; align-items: center; gap: 9px;
+  box-shadow: var(--shadow); animation: slideIn 0.3s ease; max-width: 280px;
+  font-family: 'Crimson Pro', serif;
+}
+.toast.success { border-color: var(--accent); }
+.toast.error { border-color: var(--red); }
+@keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* ========== READONLY NOTICE ========== */
+.readonly-notice {
+  background: rgba(200,160,65,0.06); border: 1px solid rgba(200,160,65,0.2);
+  border-radius: 8px; padding: 10px 16px;
+  font-size: 13px; color: var(--accent2); font-style: italic;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ========== TIMES PAGE ========== */
+.times-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:18px; }
+.time-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden; transition: all 0.2s; position: relative;
+}
+.time-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: var(--shadow); }
+.time-card-top { height: 5px; width: 100%; }
+.time-card-body { padding: 16px 20px; }
+.time-card-header { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.time-card-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.time-card-name { font-family:'Cinzel',serif; font-size:16px; font-weight:700; }
+.time-card-meta { font-size:12px; color:var(--text3); margin-top:2px; font-style:italic; }
+.time-card-desc { font-size:13px; color:var(--text2); font-style:italic; margin-bottom:12px; line-height:1.5; }
+.time-members-list { display:flex; flex-direction:column; gap:5px; }
+.time-member-row {
+  display:flex; align-items:center; gap:10px; padding:7px 10px;
+  background:var(--bg3); border-radius:8px; border:1px solid var(--border);
+}
+.time-member-avatar {
+  width:30px; height:30px; border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Cinzel',serif; font-weight:700; font-size:12px; flex-shrink:0;
+}
+.time-member-name { font-size:13px; font-weight:600; flex:1; }
+.time-member-role { font-size:11px; color:var(--text3); font-style:italic; }
+.time-card-actions { display:flex; gap:7px; padding:12px 20px; border-top:1px solid var(--border); }
+.no-times { text-align:center; padding:60px 20px; color:var(--text3); font-style:italic; font-size:14px; grid-column:1/-1; }
+/* Member picker in modal */
+.time-member-list {
+  display:flex; flex-direction:column; gap:5px;
+  max-height:260px; overflow-y:auto; padding:2px;
+}
+.time-member-option {
+  display:flex; align-items:center; gap:12px; padding:9px 12px;
+  border-radius:8px; border:1px solid var(--border); background:var(--bg3);
+  cursor:pointer; transition:all 0.15s; user-select:none;
+}
+.time-member-option:hover { border-color:var(--border2); background:var(--card); }
+.time-member-option.selected { border-color:var(--accent); background:rgba(200,160,65,0.08); }
+.time-pick-avatar {
+  width:36px; height:36px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Cinzel',serif; font-weight:700; font-size:15px; flex-shrink:0;
+}
+.time-pick-info { flex:1; min-width:0; }
+.time-pick-name { font-size:13px; font-weight:600; }
+.time-pick-role { font-size:11px; color:var(--text3); font-style:italic; }
+.time-pick-check {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; opacity:0; transition:opacity 0.15s; flex-shrink:0;
+}
+.time-member-option.selected .time-pick-check { opacity:1; }
+.time-selected-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+.time-selected-label { font-size:10px; color:var(--text3); margin-bottom:4px; font-family:'Cinzel',serif; text-transform:uppercase; letter-spacing:1px; }
+.time-chip {
+  display:inline-flex; align-items:center; gap:5px;
+  background:rgba(200,160,65,0.1); border:1px solid rgba(200,160,65,0.25);
+  color:var(--accent3); border-radius:20px; padding:3px 10px; font-size:11px;
+  font-family:'Cinzel',serif; font-weight:600;
+}
+
+/* ========== ORGS PAGE ========== */
+.orgs-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:20px; }
+.org-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden; transition: all 0.25s;
+  display: flex; flex-direction: column;
+}
+.org-card:hover { border-color: var(--accent2); transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+.org-card-banner {
+  width: 100%; height: 160px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg3); cursor: pointer; position: relative;
+}
+.org-card-banner img { width:100%; height:100%; object-fit:cover; transition: transform 0.3s; }
+.org-card-banner:hover img { transform: scale(1.05); }
+.org-card-banner-placeholder { font-size:48px; opacity:0.25; }
+.org-card-banner-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0); transition: background 0.25s;
+  display: flex; align-items: center; justify-content: center;
+}
+.org-card-banner:hover .org-card-banner-overlay { background: rgba(0,0,0,0.35); }
+.org-banner-discord-hint {
+  color: #fff; font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 1px; opacity: 0; transition: opacity 0.25s;
+  background: rgba(88,101,242,0.85); padding: 6px 16px; border-radius: 20px;
+}
+.org-card-banner:hover .org-banner-discord-hint { opacity: 1; }
+.org-card-body { padding: 16px 18px; flex: 1; }
+.org-card-name { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.org-card-desc { font-size: 13px; color: var(--text2); line-height: 1.6; font-style: italic; }
+.org-card-footer { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.discord-link-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(88,101,242,0.15); border: 1px solid rgba(88,101,242,0.35);
+  color: #7289da; border-radius: 20px; padding: 5px 14px; font-size: 12px;
+  font-family: 'Cinzel', serif; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  text-decoration: none;
+}
+.discord-link-btn:hover { background: rgba(88,101,242,0.3); }
+.no-orgs { text-align:center; padding:60px 20px; color:var(--text3); font-style:italic; grid-column:1/-1; }
+
+/* ========== SHOP CART ========== */
+.cart-bar {
+  position: fixed; bottom: 0; left: 230px; right: 0;
+  background: var(--bg2); border-top: 1px solid var(--border2);
+  padding: 10px 24px; display: none; align-items: center; gap: 14px;
+  z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+  flex-wrap: wrap;
+}
+.cart-bar.show { display: flex; }
+.cart-bar-info { font-family: 'Cinzel', serif; font-size: 13px; color: var(--accent3); }
+.cart-bar-items { font-size: 12px; color: var(--text2); flex: 1; font-style: italic; }
+.cart-item-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--card2); border: 1px solid var(--border2);
+  border-radius: 20px; padding: 4px 10px; font-size: 12px; margin: 2px;
+}
+.cart-chip-remove {
+  cursor: pointer; color: var(--red); font-size: 13px; line-height: 1;
+  background: none; border: none; padding: 0; font-family: inherit;
+}
+
+.shop-buy-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: var(--bg); border: none; border-radius: 6px;
+  padding: 6px 14px; font-size: 12px; font-family: 'Cinzel', serif;
+  font-weight: 700; cursor: pointer; transition: all 0.2s;
+}
+.shop-buy-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(200,160,65,0.4); }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ========== TAGS ========== */
+.tags-wrap { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; align-items:center; }
+.tag-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(200,160,65,0.12); border: 1px solid rgba(200,160,65,0.3);
+  color: var(--accent3); border-radius: 20px; padding: 3px 10px;
+  font-size: 11px; font-family: 'Cinzel', serif; font-weight: 600; letter-spacing: 0.5px;
+}
+.tag-chip.apostadores { background:rgba(155,89,182,0.15); border-color:rgba(155,89,182,0.4); color:#c39bd3; }
+.tag-chip-remove { cursor:pointer; color:var(--red); font-size:12px; padding:0 0 0 3px; background:none; border:none; line-height:1; }
+.tag-input-row { display:flex; gap:8px; align-items:center; }
+.tag-input-row input { flex:1; }
+
+/* ========== GUILD CODE ========== */
+.guild-code-box {
+  background: var(--bg3); border: 2px solid var(--accent);
+  border-radius: 10px; padding: 14px 18px; text-align: center; margin: 6px 0;
+}
+.guild-code-label { font-size:10px; color:var(--text3); letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; font-family:'Cinzel',serif; }
+.guild-code-value { font-family:'Share Tech Mono',monospace; font-size:14px; color:var(--accent3); word-break:break-all; letter-spacing:1px; cursor:pointer; user-select:all; }
+.guild-code-hint { font-size:11px; color:var(--text2); margin-top:6px; font-style:italic; }
+.copy-code-btn { margin-top:8px; background:rgba(200,160,65,0.15); border:1px solid rgba(200,160,65,0.3); color:var(--accent); border-radius:6px; padding:5px 14px; cursor:pointer; font-size:12px; font-family:'Cinzel',serif; transition:all 0.2s; }
+.copy-code-btn:hover { background:rgba(200,160,65,0.3); }
+
+/* ========== SAVE STATUS BAR ========== */
+.save-status-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 8px 20px; font-size: 13px; font-family: 'Cinzel', serif;
+  display: none; align-items: center; justify-content: center;
+  z-index: 999; letter-spacing: 0.5px;
+}
+.save-status-bar.saving { background: rgba(200,160,65,0.15); color: var(--accent2); border-top: 1px solid var(--accent2); }
+.save-status-bar.ok     { background: rgba(46,204,113,0.12); color: #2ecc71; border-top: 1px solid rgba(46,204,113,0.3); }
+.save-status-bar.error  { background: rgba(224,64,96,0.15);  color: var(--red); border-top: 1px solid rgba(224,64,96,0.3); }
+.save-status-bar.warn   { background: rgba(243,156,18,0.12); color: #f39c12; border-top: 1px solid rgba(243,156,18,0.3); }
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  /* Show hamburger button */
+  .hamburger-btn { display: block; }
+
+  /* Sidebar becomes a fixed drawer */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    transform: translateX(-100%);
+    z-index: 201;
+    width: 260px; min-width: 260px;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  /* Main fills full width */
+  .main { width: 100%; }
+
+  /* Pages get less padding */
+  .page { padding: 14px; gap: 14px; }
+
+  /* Topbar title smaller */
+  .topbar-title { font-size: 13px; }
+
+  /* Forms stack */
+  .form-row { grid-template-columns: 1fr !important; }
+
+  /* Members grid single column */
+  .members-grid { grid-template-columns: 1fr !important; }
+  .shop-grid { grid-template-columns: 1fr !important; }
+  .orgs-grid { grid-template-columns: 1fr !important; }
+  .times-grid { grid-template-columns: 1fr !important; }
+  .info-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Hero text */
+  .home-hero { padding: 20px; }
+  .hero-name { font-size: 24px; }
+  .hero-stats { gap: 16px; }
+
+  /* Cart bar */
+  .cart-bar { left: 0 !important; flex-wrap: wrap; padding: 10px 14px; gap: 8px; }
+
+  /* Modal */
+  .modal { margin: 10px; max-height: calc(100vh - 20px); }
+
+  /* Meta config card */
+  .meta-config-card { padding: 16px; }
+}
+
+@media (max-width: 400px) {
+  .info-grid { grid-template-columns: 1fr !important; }
+  .hero-name { font-size: 20px; }
+  .hero-stats { flex-direction: column; gap: 10px; }
+}
+
+.divider-ornament {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--text3); font-size: 14px; margin: 4px 0;
+}
+.divider-ornament::before, .divider-ornament::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+</style>
+</head>
+<body>
+
+<!-- ========== LOGIN SCREEN ========== -->
+<div id="loginScreen">
+  <div class="login-container">
+    <div class="login-header">
+      <div class="login-emblem">⚔️</div>
+      <div class="login-title">GUILDA FF</div>
+      <div class="login-sub">Final Fantasy Guild Manager</div>
+    </div>
+    <div class="login-body">
+      <div class="login-tabs">
+        <div class="login-tab active" onclick="switchTab('login')">ENTRAR</div>
+        <div class="login-tab" onclick="switchTab('register')">REGISTRAR GUILDA</div>
+      </div>
+
+      <!-- LOGIN PANEL -->
+      <div class="login-panel active" id="panelLogin">
+        <div class="form-group">
+          <label class="form-label">URL Firebase (1ª vez neste dispositivo)</label>
+          <input class="form-input" type="url" id="loginFirebaseUrl" placeholder="https://seu-projeto-default-rtdb.firebaseio.com">
+          <div style="font-size:10px;color:var(--text3);margin-top:3px;">Peça ao Líder a URL do Firebase. Após entrar uma vez, não precisa mais.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nome / Código da Guilda</label>
+          <input class="form-input" type="text" id="loginGuildCode" placeholder="Nome, abreviação ou código UUID">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Seu Nome de Personagem</label>
+          <input class="form-input" type="text" id="loginName" placeholder="Nome no jogo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Senha da Guilda</label>
+          <input class="form-input" type="password" id="loginPassword" placeholder="Senha definida pelo líder">
+        </div>
+        <div class="login-error" id="loginError"></div>
+        <button class="login-btn" onclick="doLogin()">⚔️ ENTRAR NA GUILDA</button>
+      </div>
+
+      <!-- REGISTER PANEL -->
+      <div class="login-panel" id="panelRegister">
+        <div class="form-group">
+          <label class="form-label">🔥 URL Firebase Realtime Database *</label>
+          <input class="form-input" type="url" id="regFirebaseUrl" placeholder="https://meu-projeto-default-rtdb.firebaseio.com">
+          <div style="font-size:10px;color:var(--text3);margin-top:3px;line-height:1.5;">
+            Crie grátis em <strong style="color:var(--accent)">console.firebase.google.com</strong> → Realtime Database → regras: <code style="color:var(--accent2)">".read":true,".write":true</code>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nome da Guilda *</label>
+            <input class="form-input" type="text" id="regGuildName" placeholder="Nome completo">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Abreviação *</label>
+            <input class="form-input" type="text" id="regGuildAbbr" placeholder="Ex: DRG" maxlength="6">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Senha da Guilda *</label>
+          <input class="form-input" type="password" id="regPassword" placeholder="Defina a senha de acesso">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Seu Nome (Líder) *</label>
+          <input class="form-input" type="text" id="regLeaderName" placeholder="Seu nome de personagem">
+        </div>
+        <div class="login-error" id="registerError"></div>
+        <button class="login-btn" id="regBtn" onclick="doRegister()">🏰 FUNDAR A GUILDA</button>
+      </div>
+
+      <!-- CODE SHOWN PANEL (after registration) -->
+      <div class="login-panel" id="panelCode">
+        <div style="text-align:center;margin-bottom:4px;">
+          <div style="font-size:28px;">🏰</div>
+          <div style="font-family:'Cinzel',serif;font-size:15px;color:var(--accent3);margin-top:4px;">Guilda Fundada!</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:4px;font-style:italic;">Compartilhe os dados abaixo com seus membros:</div>
+        </div>
+        <div class="guild-code-box">
+          <div class="guild-code-label">🔑 Código da Guilda (ID único)</div>
+          <div class="guild-code-value" id="displayedGuildCode" style="font-size:12px;word-break:break-all;">—</div>
+          <button class="copy-code-btn" onclick="copyGuildCode()">📋 Copiar Código</button>
+        </div>
+        <div class="guild-code-box" style="border-color:var(--blue);">
+          <div class="guild-code-label">🔥 URL do Firebase</div>
+          <div class="guild-code-value" id="displayedFirebaseUrl" style="font-size:11px;word-break:break-all;color:var(--blue);">—</div>
+          <button class="copy-code-btn" onclick="copyFirebaseUrl()" style="border-color:var(--blue);color:var(--blue);">📋 Copiar URL Firebase</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);text-align:center;font-style:italic;">Os membros precisam da URL Firebase (1ª vez) + Código + Nome + Senha para entrar.</div>
+        <button class="login-btn" id="enterAsLeaderBtn">⚔️ ENTRAR COMO LÍDER</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SIDEBAR ========== -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="app-shell" id="appShell" style="display:none">
+<nav class="sidebar" id="appSidebar">
+  <div class="sidebar-logo">
+    <div class="logo-emblem">⚔️</div>
+    <div class="logo-text">GUILDA FF</div>
+    <div class="logo-sub">Manager</div>
+  </div>
+
+  <div class="sidebar-guild">
+    <div class="guild-name" id="sideGuildName">—</div>
+    <div class="guild-abbr" id="sideGuildAbbr">—</div>
+  </div>
+
+  <div class="sidebar-user" onclick="openEditUsername()">
+    <div class="user-avatar" id="userAvatar">?</div>
+    <div class="user-info">
+      <div class="user-name" id="userNameDisplay">—</div>
+      <div class="user-role" id="userRoleDisplay">—</div>
+    </div>
+  </div>
+
+  <div class="nav-section">Menu</div>
+  <div class="nav-item active" onclick="navigate('home')" id="nav-home">
+    <div class="nav-icon">🏠</div><span>Painel</span>
+  </div>
+  <div class="nav-item" onclick="navigate('membros')" id="nav-membros">
+    <div class="nav-icon">👥</div><span>Membros</span>
+    <div class="nav-badge" id="memberBadge">0</div>
+  </div>
+  <div class="nav-item" onclick="navigate('avisos')" id="nav-avisos">
+    <div class="nav-icon">📢</div><span>Avisos</span>
+    <div class="nav-badge" id="avisosBadge" style="display:none">!</div>
+  </div>
+  <div class="nav-item" onclick="navigate('orgs')" id="nav-orgs">
+    <div class="nav-icon">🏛️</div><span>Orgs</span>
+  </div>
+  <div class="nav-item" onclick="navigate('times')" id="nav-times">
+    <div class="nav-icon">⚔️</div><span>Times</span>
+    <div class="nav-badge" id="timesBadge" style="display:none">0</div>
+  </div>
+
+  <div class="nav-section">Configurar</div>
+  <div class="nav-item" onclick="navigate('meta')" id="nav-meta">
+    <div class="nav-icon">🎯</div><span>Meta</span>
+  </div>
+  <div class="nav-item" onclick="navigate('loja')" id="nav-loja">
+    <div class="nav-icon">🏪</div><span>Loja</span>
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="nav-item" onclick="navigate('settings')" id="nav-settings">
+      <div class="nav-icon">⚙️</div><span>Temas</span>
+    </div>
+    <div class="nav-item" onclick="doLogout()" style="color:var(--red)">
+      <div class="nav-icon">🚪</div><span>Sair</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ========== MAIN ========== -->
+<div class="main" id="appMain" style="display:none">
+  <div class="topbar">
+    <button class="hamburger-btn" onclick="toggleSidebar()" id="hamburgerBtn">☰</button>
+    <div class="topbar-title" id="topbarTitle">⚔️ Painel</div>
+    <div class="topbar-right">
+      <div id="topbarActions"></div>
+    </div>
+  </div>
+
+  <!-- ======== HOME PAGE ======== -->
+  <div class="page active" id="page-home">
+    <div class="home-hero">
+      <div class="hero-greeting" id="greetingText">Bem-vindo</div>
+      <div class="hero-name">Olá, <span id="heroUsername">—</span></div>
+      <div class="hero-sub" id="heroGuildSub">Guilda —</div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-value" id="statMembers">0</div>
+          <div class="hero-stat-label">Membros</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value" id="statRoles">0</div>
+          <div class="hero-stat-label">Funções</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value" id="statMetaPercent">—</div>
+          <div class="hero-stat-label">Meta</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shop Preview -->
+    <div>
+      <div class="section-title">🏪 Itens à Venda</div>
+      <div id="homeShopArea" style="margin-top:12px;">
+        <div class="no-meta">Nenhum item cadastrado. <a href="#" onclick="navigate('loja')" style="color:var(--accent);">Ir para Loja.</a></div>
+      </div>
+    </div>
+
+    <!-- Meta -->
+    <div>
+      <div class="section-title">🎯 Meta Atual</div>
+      <div id="homeMetaArea" style="margin-top:12px;">
+        <div class="no-meta">Nenhuma meta definida.</div>
+      </div>
+    </div>
+
+    <!-- Overview -->
+    <div>
+      <div class="section-title">📊 Visão Geral</div>
+      <div class="info-grid" style="margin-top:12px;">
+        <div class="info-card">
+          <div class="info-card-icon">👥</div>
+          <div class="info-card-value" id="overviewMembers">0</div>
+          <div class="info-card-label">Total de Membros</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon">⚔️</div>
+          <div class="info-card-value" id="overviewRoles">0</div>
+          <div class="info-card-label">Funções Ativas</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon">🎯</div>
+          <div class="info-card-value" id="overviewMeta">—</div>
+          <div class="info-card-label">Nome da Meta</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-icon">📢</div>
+          <div class="info-card-value" id="overviewAvisos">0</div>
+          <div class="info-card-label">Avisos Ativos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== MEMBROS PAGE ======== -->
+  <div class="page" id="page-membros">
+    <div class="members-toolbar">
+      <input class="search-input" type="text" placeholder="🔍 Buscar membro..." id="searchInput" oninput="renderMembers()">
+      <select class="filter-select" id="filterRole" onchange="renderMembers()">
+        <option value="">Todas as funções</option>
+      </select>
+      <div style="margin-left:auto;" id="addMemberBtnWrap">
+        <button class="btn btn-primary" onclick="openAddMember()">➕ Adicionar</button>
+      </div>
+    </div>
+    <div id="membersReadonlyNotice"></div>
+    <div class="members-grid" id="membersGrid"></div>
+  </div>
+
+  <!-- ======== AVISOS PAGE ======== -->
+  <div class="page" id="page-avisos">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div class="section-title" style="flex:1">📢 Avisos da Guilda</div>
+      <div id="addAvisoBtnWrap"></div>
+    </div>
+    <div id="avisosReadonlyNotice"></div>
+    <div class="avisos-list" id="avisosList">
+      <div class="no-avisos">Nenhum aviso publicado.</div>
+    </div>
+  </div>
+
+  <!-- ======== LOJA PAGE ======== -->
+  <div class="page" id="page-loja">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div class="section-title" style="flex:1">🏪 Loja da Guilda</div>
+      <div id="addItemBtnWrap"></div>
+    </div>
+    <div id="lojaReadonlyNotice"></div>
+    <div class="shop-grid" id="shopGrid">
+      <div class="no-meta" style="grid-column:1/-1;text-align:center;padding:50px;color:var(--text3);font-style:italic;">Nenhum item cadastrado.</div>
+    </div>
+  </div>
+
+  <!-- ======== ORGS PAGE ======== -->
+  <div class="page" id="page-orgs">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div class="section-title" style="flex:1">🏛️ Organizações Parceiras</div>
+      <div id="addOrgBtnWrap"></div>
+    </div>
+    <div id="orgsReadonlyNotice"></div>
+    <div class="orgs-grid" id="orgsGrid">
+      <div class="no-orgs">Nenhuma organização cadastrada ainda.</div>
+    </div>
+  </div>
+
+  <!-- ======== META PAGE ======== -->
+  <div class="page" id="page-meta">
+    <div class="section-title">🎯 Meta da Guilda</div>
+    <div id="metaReadonlyNotice"></div>
+    <div class="meta-config-card" id="metaConfigCard">
+      <div class="form-group">
+        <label class="form-label">Nome da Meta</label>
+        <input class="form-input" type="text" id="metaName" placeholder="Ex: Conquistar o torneio...">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor Atual</label>
+          <input class="form-input" type="number" id="metaCurrent" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor Objetivo</label>
+          <input class="form-input" type="number" id="metaTarget" placeholder="100" min="1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Unidade (opcional)</label>
+        <input class="form-input" type="text" id="metaUnit" placeholder="pontos, membros, vitórias...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descrição (opcional)</label>
+        <textarea class="form-textarea" id="metaDesc" placeholder="Descreva o objetivo..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" onclick="saveMeta()">💾 Salvar Meta</button>
+        <button class="btn btn-ghost" onclick="clearMeta()">🗑️ Limpar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== TIMES PAGE ======== -->
+  <div class="page" id="page-times">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div class="section-title" style="flex:1">⚔️ Times da Guilda</div>
+      <div id="addTimeBtnWrap">
+        <button class="btn btn-primary" onclick="openAddTime()">⚔️ Criar Time</button>
+      </div>
+    </div>
+    <div class="times-grid" id="timesGrid">
+      <div class="no-times">Nenhum time criado ainda. Clique em "Criar Time" para começar!</div>
+    </div>
+  </div>
+
+  <!-- ======== SETTINGS PAGE ======== -->
+  <div class="page" id="page-settings">
+    <div class="section-title">⚙️ Configurações</div>
+    <div class="meta-config-card">
+      <div>
+        <div class="form-label" style="margin-bottom:14px;">🎨 Tema da Interface</div>
+        <div class="themes-grid">
+          <div class="theme-btn" onclick="setTheme('default')" id="theme-default" style="background:#161d27;border-color:#c8a041">
+            <div class="theme-preview" style="background:linear-gradient(135deg,#0a0c10,#c8a041)"></div>
+            <div class="theme-name" style="color:#c8a041">DOURADO</div>
+          </div>
+          <div class="theme-btn" onclick="setTheme('crimson')" id="theme-crimson" style="background:#241018;border-color:#333">
+            <div class="theme-preview" style="background:linear-gradient(135deg,#100608,#e04060)"></div>
+            <div class="theme-name" style="color:#e04060">CRIMSON</div>
+          </div>
+          <div class="theme-btn" onclick="setTheme('ocean')" id="theme-ocean" style="background:#0d2035;border-color:#333">
+            <div class="theme-preview" style="background:linear-gradient(135deg,#050e18,#00b4d8)"></div>
+            <div class="theme-name" style="color:#00b4d8">OCEAN</div>
+          </div>
+          <div class="theme-btn" onclick="setTheme('dark')" id="theme-dark" style="background:#141414;border-color:#333">
+            <div class="theme-preview" style="background:linear-gradient(135deg,#080808,#e0e0e0)"></div>
+            <div class="theme-name" style="color:#e0e0e0">DARK</div>
+          </div>
+          <div class="theme-btn" onclick="setTheme('forest')" id="theme-forest" style="background:#122018;border-color:#333">
+            <div class="theme-preview" style="background:linear-gradient(135deg,#060d09,#4caf78)"></div>
+            <div class="theme-name" style="color:#4caf78">FOREST</div>
+          </div>
+          <div class="theme-btn" onclick="setTheme('abyss')" id="theme-abyss" style="background:#161228;border-color:#333">
+            <div class="theme-preview" style="background:linear-gradient(135deg,#08060f,#9b59b6)"></div>
+            <div class="theme-name" style="color:#9b59b6">ABYSS</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="form-label" style="margin-bottom:10px;">🔥 Dados para Compartilhar com Membros</div>
+        <div class="guild-code-box">
+          <div class="guild-code-label">URL Firebase (informar 1 vez por dispositivo)</div>
+          <div class="guild-code-value" id="settingsFirebaseUrl" style="font-size:10px;word-break:break-all;color:var(--blue);">—</div>
+          <button class="copy-code-btn" onclick="_copyToClipboard(document.getElementById('settingsFirebaseUrl').textContent)" style="border-color:var(--blue);color:var(--blue);">📋 Copiar URL Firebase</button>
+        </div>
+        <div class="guild-code-box" style="margin-top:8px;">
+          <div class="guild-code-label">Código da Guilda (ID único)</div>
+          <div class="guild-code-value" id="settingsGuildCode" style="font-size:12px;word-break:break-all;">—</div>
+          <div class="guild-code-hint">Membros usam: URL Firebase (1ª vez) + este código + nome + senha</div>
+          <button class="copy-code-btn" onclick="copySettingsCode()">📋 Copiar Código</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- end .main -->
+</div><!-- end .app-shell -->
+
+<!-- ====== MODAL MEMBRO ====== -->
+<div class="modal-overlay" id="memberModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="memberModalTitle">➕ Adicionar Membro</div>
+      <button class="modal-close" onclick="closeMemberModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editMemberId">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome *</label>
+          <input class="form-input" type="text" id="mName" placeholder="Nome do membro">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ID do Membro *</label>
+          <input class="form-input" type="text" id="mId" placeholder="#0001">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Número de Celular</label>
+        <input class="form-input" type="tel" id="mPhone" placeholder="(00) 00000-0000">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Função na Guilda *</label>
+          <select class="form-select" id="mRole">
+            <option value="">Selecione...</option>
+            <option value="Líder">👑 Líder</option>
+            <option value="Co-Líder">⚡ Co-Líder</option>
+            <option value="Veterano">⚔️ Veterano</option>
+            <option value="Membro">👤 Membro</option>
+            <option value="Personalizado">✨ Personalizado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Função Personalizada</label>
+          <input class="form-input" type="text" id="mRoleCustom" placeholder="Função...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observações</label>
+        <textarea class="form-textarea" id="mNotes" placeholder="Anotações sobre o membro..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tags do Membro</label>
+        <div class="tag-input-row">
+          <input class="form-input" type="text" id="mTagInput" placeholder="Ex: Apostadores, VIP, Recruta... (Enter para adicionar)">
+          <button class="btn btn-ghost btn-sm" type="button" onclick="addMemberTag()">+ Tag</button>
+        </div>
+        <div class="tags-wrap" id="mTagsPreview" style="margin-top:8px;"></div>
+        <div class="form-hint">A tag <strong>Apostadores</strong> permite gerenciar a aba de Orgs</div>
+      </div>
+      <div class="divider-ornament">⚔️ Advertências</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Quantidade de Advertências</label>
+          <input class="form-input" type="number" id="mWarnings" placeholder="0" min="0" value="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Motivo das Advertências</label>
+        <textarea class="form-textarea" id="mWarningReason" placeholder="Descreva o motivo das advertências (visível ao membro ao clicar em ?)..." style="min-height:70px;"></textarea>
+        <div class="form-hint">* Somente Líder e Co-Líder podem editar o motivo. O membro pode ver ao clicar em ❓</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMemberModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMember()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL AVISO ====== -->
+<div class="modal-overlay" id="avisoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="avisoModalTitle">📢 Novo Aviso</div>
+      <button class="modal-close" onclick="closeAvisoModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editAvisoId">
+      <div class="form-group">
+        <label class="form-label">Título do Aviso *</label>
+        <input class="form-input" type="text" id="avisoTitle" placeholder="Título do aviso">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" id="avisoType">
+            <option value="info">📋 Informação</option>
+            <option value="alerta">⚠️ Alerta</option>
+            <option value="evento">🎉 Evento</option>
+            <option value="urgente">🚨 Urgente</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mensagem *</label>
+        <textarea class="form-textarea" id="avisoText" placeholder="Escreva o aviso aqui..." style="min-height:100px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeAvisoModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAviso()">📢 Publicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL LOJA ITEM ====== -->
+<div class="modal-overlay" id="shopItemModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="shopItemModalTitle">🏪 Novo Item</div>
+      <button class="modal-close" onclick="closeShopItemModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editItemId">
+      <div class="form-group">
+        <label class="form-label">Nome do Item *</label>
+        <input class="form-input" type="text" id="itemName" placeholder="Nome do item">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Preço *</label>
+          <input class="form-input" type="text" id="itemPrice" placeholder="Ex: 500 gil">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <textarea class="form-textarea" id="itemDesc" placeholder="Descrição do item..." style="min-height:70px;"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Link de Compra</label>
+        <input class="form-input" type="url" id="itemBuyLink" placeholder="https://... (link para onde o comprador será redirecionado)">
+        <div class="form-hint">Ao clicar em "Comprar", o membro será direcionado para este link</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Imagem do Item</label>
+        <input class="form-input" type="file" id="itemImageFile" accept="image/*" onchange="previewItemImage(this)">
+        <div class="form-hint">Importar imagem do seu dispositivo</div>
+        <div id="itemImagePreview" style="margin-top:8px;display:none;">
+          <img id="itemImagePreviewImg" style="max-width:100%;max-height:150px;border-radius:8px;border:1px solid var(--border2);">
+          <button class="btn btn-danger btn-xs" style="margin-top:6px;" onclick="clearItemImage()">🗑️ Remover</button>
+        </div>
+        <input type="hidden" id="itemImageData">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeShopItemModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveShopItem()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL USERNAME ====== -->
+<div class="modal-overlay" id="usernameModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Editar Nome</div>
+      <button class="modal-close" onclick="closeUsernameModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Seu Nome</label>
+        <input class="form-input" type="text" id="newUsername" placeholder="Seu nome...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeUsernameModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUsername()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL DELETE CONFIRM ====== -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <div class="modal-title">⚠️ Confirmar</div>
+      <button class="modal-close" onclick="closeConfirm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text2);font-size:15px;" id="confirmText">Tem certeza?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn btn-danger" id="confirmBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL WARNING REASON ====== -->
+<div class="modal-overlay" id="warningReasonModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <div class="modal-title">⚠️ Motivo das Advertências</div>
+      <button class="modal-close" onclick="document.getElementById('warningReasonModal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text2);font-size:15px;line-height:1.7;" id="warningReasonText">—</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="document.getElementById('warningReasonModal').classList.remove('open')">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL TIME ====== -->
+<div class="modal-overlay" id="timeModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="timeModalTitle">⚔️ Criar Time</div>
+      <button class="modal-close" onclick="closeTimeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editTimeId">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome do Time *</label>
+          <input class="form-input" type="text" id="timeName" placeholder="Ex: Time Alpha, Esquadrão X...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cor do Time</label>
+          <select class="form-select" id="timeColor">
+            <option value="gold">🟡 Dourado</option>
+            <option value="red">🔴 Vermelho</option>
+            <option value="blue">🔵 Azul</option>
+            <option value="green">🟢 Verde</option>
+            <option value="purple">🟣 Roxo</option>
+            <option value="orange">🟠 Laranja</option>
+            <option value="cyan">🩵 Ciano</option>
+            <option value="pink">🩷 Rosa</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descrição / Objetivo do Time</label>
+        <textarea class="form-textarea" id="timeDesc" placeholder="Descreva o objetivo ou função deste time..." style="min-height:60px;"></textarea>
+      </div>
+      <div class="divider-ornament">👥 Selecionar Membros</div>
+      <div class="form-group">
+        <label class="form-label">Buscar Membro</label>
+        <input class="form-input" type="text" id="timeMemberSearch" placeholder="🔍 Filtrar membros..." oninput="filterTimeMemberList()">
+      </div>
+      <div class="time-member-list" id="timeMemberList"></div>
+      <div id="timeSelectedPreview" style="margin-top:10px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeTimeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTime()">⚔️ Salvar Time</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== CART BAR ====== -->
+<div class="cart-bar" id="cartBar">
+  <div class="cart-bar-info">🛒 Carrinho</div>
+  <div class="cart-bar-items" id="cartBarItems"></div>
+  <button class="btn btn-danger btn-sm" onclick="clearCart()">🗑️ Limpar</button>
+  <button class="btn btn-primary" onclick="checkoutCart()">💳 Finalizar Compra</button>
+</div>
+
+<!-- ====== MODAL ORG ====== -->
+<div class="modal-overlay" id="orgModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="orgModalTitle">🏛️ Nova Organização</div>
+      <button class="modal-close" onclick="closeOrgModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editOrgId">
+      <div class="form-group">
+        <label class="form-label">Nome da Org *</label>
+        <input class="form-input" type="text" id="orgName" placeholder="Nome da organização">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <textarea class="form-textarea" id="orgDesc" placeholder="Descreva a organização..." style="min-height:80px;"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Link do Discord *</label>
+        <input class="form-input" type="url" id="orgDiscord" placeholder="https://discord.gg/...">
+        <div class="form-hint">Clicar na foto irá redirecionar para este link</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Foto/Banner da Org</label>
+        <input class="form-input" type="file" id="orgImageFile" accept="image/*" onchange="previewOrgImage(this)">
+        <div id="orgImagePreview" style="margin-top:8px;display:none;">
+          <img id="orgImagePreviewImg" style="max-width:100%;max-height:160px;border-radius:8px;border:1px solid var(--border2);">
+          <button class="btn btn-danger btn-xs" style="margin-top:6px;" onclick="clearOrgImage()">🗑️ Remover</button>
+        </div>
+        <input type="hidden" id="orgImageData">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeOrgModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveOrg()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODAL CHECKOUT ====== -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <div class="modal-title">💳 Finalizar Compra</div>
+      <button class="modal-close" onclick="document.getElementById('checkoutModal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text2);font-size:14px;line-height:1.7;" id="checkoutText"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('checkoutModal').classList.remove('open')">Fechar</button>
+      <button class="btn btn-primary" id="checkoutGoBtn">🛒 Ir para Compra</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<div class="save-status-bar" id="saveStatusBar"></div>
+
+<script>
+// ============= CONSTANTS =============
+const API_URL = 'https://api.anthropic.com/v1/messages';
+const MODEL = 'claude-sonnet-4-20250514';
+
+// ============= STATE =============
+let currentGuild = null; // { name, abbr, passwordHash, members[], meta, avisos[], shopItems[], requests[], theme }
+let currentUser = null;  // { name, role, isLeader, isCoLeader }
+let currentGuildKey = null; // storage key
+
+// ============= THEME (per-member preference, stored locally) =============
+function themeKey() {
+  // Key is per user UID so each member has their own theme
+  return 'guilda_theme_' + (currentUser ? currentUser.uid : 'guest');
+}
+
+function setTheme(theme, save = true) {
+  document.documentElement.setAttribute('data-theme', theme === 'default' ? '' : theme);
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('theme-' + theme);
+  if (el) el.classList.add('active');
+  if (save) {
+    try { localStorage.setItem(themeKey(), theme); } catch(e) {}
+  }
+}
+
+function loadTheme() {
+  // Always start with default (gold) until user's personal pref is loaded
+  try {
+    const t = localStorage.getItem(themeKey()) || 'default';
+    setTheme(t, false);
+  } catch(e) { setTheme('default', false); }
+}
+
+function loadMemberTheme() {
+  // Called after login to apply this member's personal theme
+  try {
+    const t = localStorage.getItem(themeKey()) || 'default';
+    setTheme(t, false);
+  } catch(e) {}
+}
+
+// ============= FIREBASE REALTIME DATABASE =============
+
+let _firebaseUrl = null;
+
+function getFirebaseUrl() {
+  if (_firebaseUrl) return _firebaseUrl;
+  _firebaseUrl = (localStorage.getItem('gff_firebase_url') || '').replace(/\/$/, '');
+  return _firebaseUrl || null;
+}
+function setFirebaseUrl(url) {
+  _firebaseUrl = (url || '').trim().replace(/\/$/, '');
+  localStorage.setItem('gff_firebase_url', _firebaseUrl);
+}
+function hasFirebase() { return !!getFirebaseUrl(); }
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+// ---- Firebase REST: GET ----
+async function fbGet(path) {
+  const base = getFirebaseUrl();
+  if (!base) return null;
+  try {
+    const r = await fetch(base + path + '.json?t=' + Date.now(), {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' }
+    });
+    if (r.ok) return await r.json();
+  } catch(e) { console.warn('fbGet error:', path, e.message); }
+  return null;
+}
+
+// ---- Firebase REST: PUT (with retry) ----
+async function fbPut(path, data) {
+  const base = getFirebaseUrl();
+  if (!base) throw new Error('Firebase não configurado. Configure a URL nas ⚙️ Configurações.');
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const r = await fetch(base + path + '.json', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (r.ok) return true;
+      if (r.status === 401 || r.status === 403) {
+        throw new Error('Permissão negada. Verifique as regras do Firebase (deve permitir read/write).');
+      }
+      throw new Error('HTTP ' + r.status);
+    } catch(e) {
+      if (attempt === 3) throw e;
+      await new Promise(res => setTimeout(res, 800 * attempt));
+    }
+  }
+}
+
+// ---- Firebase keys ----
+function encodeFirebaseKey(s) {
+  return s.replace(/[.#$\/\[\]]/g, '_');
+}
+
+// ---- Local cache (fallback + speed) ----
+function cacheGuild(guildId, data) {
+  try { localStorage.setItem('gff_cache:' + guildId, JSON.stringify(data)); } catch(e) {}
+}
+function getCachedGuild(guildId) {
+  try { const s = localStorage.getItem('gff_cache:' + guildId); return s ? JSON.parse(s) : null; }
+  catch(e) { return null; }
+}
+function cacheGuildNames(guild, guildId) {
+  try {
+    if (guild.name) localStorage.setItem('gff_name:' + guild.name.toLowerCase().trim(), guildId);
+    if (guild.abbr) localStorage.setItem('gff_name:' + guild.abbr.toLowerCase().trim(), guildId);
+  } catch(e) {}
+}
+function findGuildIdByNameLocal(q) {
+  try { return localStorage.getItem('gff_name:' + q.toLowerCase().trim()) || null; }
+  catch(e) { return null; }
+}
+
+// ---- SAVE: always Firebase first, show error if it fails ----
+async function saveGuild() {
+  if (!currentGuildKey || !currentGuild) return;
+  currentGuild.updatedAt = Date.now();
+  // Update local cache immediately so UI is instant
+  cacheGuild(currentGuildKey, currentGuild);
+  cacheGuildNames(currentGuild, currentGuildKey);
+  if (!hasFirebase()) {
+    showSaveStatus('⚠️ Firebase não configurado — dados só neste dispositivo!', 'warn');
+    return;
+  }
+  showSaveStatus('💾 Salvando...', 'saving');
+  try {
+    await fbPut('/guilds/' + currentGuildKey, currentGuild);
+    showSaveStatus('✅ Salvo!', 'ok');
+  } catch(e) {
+    showSaveStatus('❌ Erro ao salvar: ' + e.message, 'error');
+    console.error('saveGuild failed:', e);
+  }
+}
+
+// ---- LOAD from Firebase (always fresh, cache as fallback) ----
+async function loadGuildById(guildId) {
+  if (hasFirebase()) {
+    const data = await fbGet('/guilds/' + guildId);
+    if (data && data.name) {
+      cacheGuild(guildId, data);
+      cacheGuildNames(data, guildId);
+      return data;
+    }
+    // Firebase returned null/empty — maybe network hiccup, try cache
+    const cached = getCachedGuild(guildId);
+    if (cached) { console.warn('Firebase returned null, using cache'); return cached; }
+    return null;
+  }
+  return getCachedGuild(guildId);
+}
+
+// ---- RELOAD fresh data from Firebase into currentGuild ----
+async function reloadGuild() {
+  if (!currentGuildKey) return;
+  const fresh = await loadGuildById(currentGuildKey);
+  if (fresh && fresh.name) {
+    currentGuild = fresh;
+    cacheGuild(currentGuildKey, fresh);
+  }
+}
+
+// ---- Find guild by name/abbr ----
+async function findGuildByNameOrAbbr(q) {
+  const key = q.toLowerCase().trim();
+  if (hasFirebase()) {
+    const guildId = await fbGet('/guildIndex/' + encodeFirebaseKey(key));
+    if (guildId && typeof guildId === 'string') {
+      const data = await loadGuildById(guildId);
+      if (data) return { id: guildId, data };
+    }
+  }
+  const localId = findGuildIdByNameLocal(key);
+  if (localId) {
+    const data = await loadGuildById(localId);
+    if (data) return { id: localId, data };
+  }
+  return null;
+}
+
+// ---- Save guild name → id index ----
+async function saveGuildIndex(guild, guildId) {
+  if (!hasFirebase()) return;
+  try {
+    await fbPut('/guildIndex/' + encodeFirebaseKey(guild.name.toLowerCase()), guildId);
+    await fbPut('/guildIndex/' + encodeFirebaseKey(guild.abbr.toLowerCase()), guildId);
+  } catch(e) { console.warn('saveGuildIndex failed:', e.message); }
+}
+
+// ---- Resolve what the user typed in the login field ----
+async function resolveGuildCode(input) {
+  input = input.trim();
+
+  // GFF2 sync package
+  if (input.startsWith('GFF2:')) {
+    const pkg = parseSyncPackage(input);
+    if (!pkg) return { error: 'Pacote GFF2 inválido.' };
+    if (pkg.fbUrl) setFirebaseUrl(pkg.fbUrl);
+    const data = await loadGuildById(pkg.guildId);
+    if (!data) return { error: 'Guilda não encontrada no Firebase.' };
+    return { id: pkg.guildId, data };
+  }
+  // GFF1 legacy
+  if (input.startsWith('GFF1:')) {
+    const pkg = parseSyncPackage(input);
+    if (!pkg || !pkg.legacy) return { error: 'Pacote GFF1 inválido.' };
+    const data = pkg.data;
+    if (!data || !data.guildId) return { error: 'Pacote sem guildId.' };
+    cacheGuild(data.guildId, data);
+    cacheGuildNames(data, data.guildId);
+    return { id: data.guildId, data };
+  }
+  // UUID direct
+  const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (uuidRe.test(input)) {
+    const data = await loadGuildById(input);
+    if (data) return { id: input, data };
+    return { error: 'ID não encontrado. Certifique-se que o Firebase está configurado.' };
+  }
+  // Name / abbr
+  const found = await findGuildByNameOrAbbr(input);
+  if (found) return found;
+  return { error: hasFirebase()
+    ? '⚔️ Guilda "' + input + '" não encontrada. Verifique o nome ou código.'
+    : '⚔️ Firebase não configurado. Informe a URL Firebase primeiro.' };
+}
+
+function generateSyncPackage(data) {
+  try {
+    const pkg = { v: 2, fbUrl: getFirebaseUrl() || '', guildId: data.guildId };
+    return 'GFF2:' + btoa(unescape(encodeURIComponent(JSON.stringify(pkg))));
+  } catch(e) { return ''; }
+}
+function parseSyncPackage(code) {
+  if (code.startsWith('GFF2:')) {
+    try { return JSON.parse(decodeURIComponent(escape(atob(code.slice(5))))); } catch(e) { return null; }
+  }
+  if (code.startsWith('GFF1:')) {
+    try {
+      const data = JSON.parse(decodeURIComponent(escape(atob(code.slice(5)))));
+      return { legacy: true, data };
+    } catch(e) { return null; }
+  }
+  return null;
+}
+
+// ---- Save status indicator ----
+let _saveStatusTimer = null;
+function showSaveStatus(msg, type) {
+  let el = document.getElementById('saveStatusBar');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'save-status-bar ' + type;
+  el.style.display = 'flex';
+  clearTimeout(_saveStatusTimer);
+  if (type === 'ok') {
+    _saveStatusTimer = setTimeout(() => { el.style.display = 'none'; }, 2500);
+  }
+}
+
+// ---- Auto-refresh: pull fresh data from Firebase every 30s ----
+let _refreshInterval = null;
+function startAutoRefresh() {
+  stopAutoRefresh();
+  _refreshInterval = setInterval(async () => {
+    if (!currentGuildKey) return;
+    await reloadGuild();
+    // Re-render current page silently
+    const activePage = document.querySelector('.page.active');
+    if (!activePage) return;
+    const page = activePage.id.replace('page-', '');
+    if (page === 'home') renderHome();
+    else if (page === 'membros') renderMembers();
+    else if (page === 'avisos') renderAvisos();
+    else if (page === 'times') renderTimes();
+    else if (page === 'orgs') renderOrgs();
+    else if (page === 'loja') renderShop();
+  }, 30000);
+}
+function stopAutoRefresh() {
+  if (_refreshInterval) { clearInterval(_refreshInterval); _refreshInterval = null; }
+}
+
+// ============= HASH =============
+async function hashStr(str) {
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  } catch(e) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+    return Math.abs(h).toString(16);
+  }
+}
+
+// ============= LOGIN TAB =============
+function switchTab(tab) {
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.login-tab:nth-child(${tab === 'login' ? 1 : 2})`).classList.add('active');
+  document.getElementById(tab === 'login' ? 'panelLogin' : 'panelRegister').classList.add('active');
+}
+
+// ============= REGISTER =============
+async function doRegister() {
+  const name = document.getElementById('regGuildName').value.trim();
+  const abbr = document.getElementById('regGuildAbbr').value.trim().toUpperCase();
+  const pass = document.getElementById('regPassword').value;
+  const leader = document.getElementById('regLeaderName').value.trim();
+  const fbUrl = document.getElementById('regFirebaseUrl').value.trim().replace(/\/$/, '');
+  const err = document.getElementById('registerError');
+  err.classList.remove('show');
+
+  if (!name || !abbr || !pass || !leader) { err.textContent = 'Preencha todos os campos obrigatórios.'; err.classList.add('show'); return; }
+  if (abbr.length > 6) { err.textContent = 'Abreviação: máximo 6 caracteres.'; err.classList.add('show'); return; }
+  if (!fbUrl || !fbUrl.startsWith('https://')) { err.textContent = '🔥 Cole a URL do Firebase Realtime Database (começa com https://).'; err.classList.add('show'); return; }
+
+  // Save Firebase URL
+  setFirebaseUrl(fbUrl);
+
+  // Check duplicate name in Firebase
+  const regBtn = document.getElementById('regBtn');
+  regBtn.textContent = '⏳ Verificando...'; regBtn.disabled = true;
+  const existing = await findGuildByNameOrAbbr(name) || await findGuildByNameOrAbbr(abbr);
+  if (existing) {
+    regBtn.textContent = '🏰 FUNDAR A GUILDA'; regBtn.disabled = false;
+    err.textContent = '⚔️ Já existe uma guilda com esse nome ou abreviação!'; err.classList.add('show'); return;
+  }
+
+  const passHash = await hashStr(pass);
+  const guildId = generateUUID();
+  const leaderUid = uid();
+
+  const newGuild = {
+    guildId, name, abbr, passwordHash: passHash,
+    members: [{ uid: leaderUid, name: leader, id: '#0001', phone: '', role: 'Líder', tags: [], notes: '', warnings: 0, warningReason: '' }],
+    meta: null, avisos: [], shopItems: [], orgs: [], times: [], requests: [], createdAt: Date.now()
+  };
+
+  regBtn.textContent = '⏳ Salvando no Firebase...'; 
+  try {
+    await fbPut('/guilds/' + guildId, newGuild);
+    await saveGuildIndex(newGuild, guildId);
+  } catch(e) {
+    regBtn.textContent = '🏰 FUNDAR A GUILDA'; regBtn.disabled = false;
+    err.textContent = '❌ Erro ao salvar no Firebase: ' + e.message; err.classList.add('show'); return;
+  }
+  regBtn.textContent = '🏰 FUNDAR A GUILDA'; regBtn.disabled = false;
+
+  cacheGuild(guildId, newGuild);
+  cacheGuildNames(newGuild, guildId);
+
+  currentGuildKey = guildId;
+  currentGuild = newGuild;
+  currentUser = { name: leader, role: 'Líder', isLeader: true, isCoLeader: false, tags: [], uid: leaderUid };
+  saveSession();
+
+  // Show code panel
+  document.querySelectorAll('.login-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panelCode').classList.add('active');
+  document.getElementById('displayedGuildCode').textContent = guildId;
+  document.getElementById('displayedFirebaseUrl').textContent = fbUrl;
+  document.getElementById('enterAsLeaderBtn').onclick = () => enterApp();
+}
+
+function copyGuildCode() {
+  _copyToClipboard(document.getElementById('displayedGuildCode').textContent);
+}
+function copyFirebaseUrl() {
+  _copyToClipboard(document.getElementById('displayedFirebaseUrl').textContent);
+}
+
+function copySettingsCode() {
+  if (!currentGuild) return;
+  _copyToClipboard(currentGuildKey);
+}
+
+function _copyToClipboard(text) {
+  if (!text) return;
+  navigator.clipboard.writeText(text)
+    .then(() => toast('📋 Copiado!', 'success'))
+    .catch(() => {
+      const el = document.createElement('textarea');
+      el.value = text; document.body.appendChild(el); el.select();
+      document.execCommand('copy'); el.remove();
+      toast('📋 Copiado!', 'success');
+    });
+}
+
+// ============= LOGIN =============
+async function doLogin() {
+  const codeOrName = document.getElementById('loginGuildCode').value.trim();
+  const nameInput = document.getElementById('loginName').value.trim();
+  const passInput = document.getElementById('loginPassword').value;
+  const fbUrlInput = document.getElementById('loginFirebaseUrl').value.trim().replace(/\/$/, '');
+  const err = document.getElementById('loginError');
+  err.classList.remove('show');
+
+  if (!codeOrName || !nameInput || !passInput) { err.textContent = 'Preencha todos os campos.'; err.classList.add('show'); return; }
+  if (fbUrlInput) setFirebaseUrl(fbUrlInput);
+
+  err.innerHTML = '⏳ Conectando ao banco de dados...';
+  err.style.color = 'var(--accent2)'; err.classList.add('show');
+
+  const resolved = await resolveGuildCode(codeOrName);
+  err.classList.remove('show'); err.style.color = '';
+
+  if (resolved.error) { err.textContent = resolved.error; err.classList.add('show'); return; }
+
+  const { id: resolvedId, data: guild } = resolved;
+  const passHash = await hashStr(passInput);
+  if (guild.passwordHash !== passHash) { err.textContent = '🔒 Senha incorreta.'; err.classList.add('show'); return; }
+
+  currentGuildKey = resolvedId;
+  currentGuild = guild;
+
+  const member = guild.members.find(m => m.name.toLowerCase() === nameInput.toLowerCase());
+  if (member) {
+    currentUser = { name: member.name, role: member.role, tags: member.tags || [],
+      isLeader: member.role === 'Líder', isCoLeader: member.role === 'Co-Líder', uid: member.uid };
+    saveSession(); enterApp();
+  } else {
+    // Auto-add as Membro (open guild - leader can change role later)
+    const newMember = { uid: uid(), name: nameInput, id: '#' + String(guild.members.length+1).padStart(4,'0'),
+      phone: '', role: 'Membro', tags: [], notes: '', warnings: 0, warningReason: '' };
+    guild.members.push(newMember);
+    currentGuild = guild;
+    await saveGuild();
+    currentUser = { name: nameInput, role: 'Membro', tags: [], isLeader: false, isCoLeader: false, uid: newMember.uid };
+    saveSession(); enterApp();
+    toast('✅ Bem-vindo(a)! Você foi adicionado(a) como Membro.', 'success');
+  }
+}
+
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+// ============= SESSION =============
+function saveSession() {
+  try {
+    localStorage.setItem('guilda_session', JSON.stringify({ user: currentUser, guildKey: currentGuildKey }));
+  } catch(e) {}
+}
+function getSession() {
+  try { return JSON.parse(localStorage.getItem('guilda_session')); } catch(e) { return null; }
+}
+function clearSession() {
+  try { localStorage.removeItem('guilda_session'); } catch(e) {}
+}
+// ============= ENTER APP =============
+function enterApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'flex';
+  document.getElementById('appMain').style.display = 'flex';
+  updateSidebarUI();
+  loadMemberTheme();
+  startAutoRefresh();
+  navigate('home');
+}
+
+function doLogout() {
+  stopAutoRefresh();
+  clearSession();
+  currentGuild = null; currentUser = null; currentGuildKey = null;
+  document.getElementById('appShell').style.display = 'none';
+  document.getElementById('appMain').style.display = 'none';
+  showLogin();
+}
+
+// ============= NAVIGATE =============
+async function navigate(page) {
+  // Switch active page immediately for instant feel
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
+
+  const titles = { home:'⚔️ Painel', membros:'👥 Membros', avisos:'📢 Avisos', orgs:'🏛️ Orgs', times:'⚔️ Times', meta:'🎯 Meta', loja:'🏪 Loja', settings:'⚙️ Configurações' };
+  document.getElementById('topbarTitle').textContent = titles[page] || page;
+  document.getElementById('topbarActions').innerHTML = '';
+  closeSidebar();
+
+  // Pull fresh data from Firebase before rendering
+  await reloadGuild();
+  updateSidebarUI();
+
+  if (page === 'home') renderHome();
+  else if (page === 'membros') renderMembers();
+  else if (page === 'avisos') renderAvisos();
+  else if (page === 'orgs') renderOrgs();
+  else if (page === 'times') renderTimes();
+  else if (page === 'meta') loadMetaForm();
+  else if (page === 'loja') renderShop();
+  else if (page === 'settings') {
+    const codeEl = document.getElementById('settingsGuildCode');
+    const fbEl = document.getElementById('settingsFirebaseUrl');
+    if (codeEl) codeEl.textContent = currentGuildKey || '—';
+    if (fbEl) fbEl.textContent = getFirebaseUrl() || '(não configurado)';
+  }
+  updateCartBar();
+}
+
+// ============= SIDEBAR MOBILE =============
+function toggleSidebar() {
+  const sidebar = document.getElementById('appSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const isOpen = sidebar.classList.contains('open');
+  if (isOpen) {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+  } else {
+    sidebar.classList.add('open');
+    overlay.classList.add('show');
+  }
+}
+
+function closeSidebar() {
+  document.getElementById('appSidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+// ============= PERMISSIONS =============
+function canEdit() {
+  return currentUser && (currentUser.isLeader || currentUser.isCoLeader);
+}
+
+// ============= SIDEBAR UI =============
+function updateSidebarUI() {
+  if (!currentGuild || !currentUser) return;
+  document.getElementById('sideGuildName').textContent = currentGuild.name;
+  document.getElementById('sideGuildAbbr').textContent = '[' + currentGuild.abbr + ']';
+  document.getElementById('userAvatar').textContent = (currentUser.name||'?').charAt(0).toUpperCase();
+  document.getElementById('userNameDisplay').textContent = currentUser.name;
+  document.getElementById('userRoleDisplay').textContent = currentUser.role;
+  document.getElementById('memberBadge').textContent = (currentGuild.members || []).length;
+  const times = currentGuild.times || [];
+  const tb = document.getElementById('timesBadge');
+  if (tb) { tb.style.display = times.length > 0 ? '' : 'none'; tb.textContent = times.length; }
+}
+
+// ============= HOME =============
+function renderHome() {
+  if (!currentGuild || !currentUser) return;
+  const members = currentGuild.members || [];
+  const roles = [...new Set(members.map(m => m.role))].length;
+  document.getElementById('heroUsername').textContent = currentUser.name;
+  document.getElementById('heroGuildSub').textContent = '⚔️ ' + currentGuild.name + ' [' + currentGuild.abbr + ']';
+  document.getElementById('statMembers').textContent = members.length;
+  document.getElementById('statRoles').textContent = roles;
+  document.getElementById('overviewMembers').textContent = members.length;
+  document.getElementById('overviewRoles').textContent = roles;
+  document.getElementById('overviewAvisos').textContent = (currentGuild.avisos || []).length;
+
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Bom dia ☀️' : h < 18 ? 'Boa tarde 🌤️' : 'Boa noite 🌙';
+  document.getElementById('greetingText').textContent = g;
+
+  // Meta
+  const meta = currentGuild.meta;
+  const metaArea = document.getElementById('homeMetaArea');
+  if (meta && meta.name) {
+    const pct = meta.target > 0 ? Math.min(100, Math.round((meta.current / meta.target) * 100)) : 0;
+    document.getElementById('statMetaPercent').textContent = pct + '%';
+    document.getElementById('overviewMeta').textContent = meta.name.length > 10 ? meta.name.slice(0,10)+'…' : meta.name;
+    metaArea.innerHTML = `<div class="meta-card">
+      <div class="meta-header"><div class="meta-title">${esc(meta.name)}</div><div class="meta-percent">${pct}%</div></div>
+      ${meta.desc ? `<p style="color:var(--text2);font-size:13px;margin-bottom:10px;font-style:italic;">${esc(meta.desc)}</p>` : ''}
+      <div class="meta-progress-bar"><div class="meta-progress-fill" style="width:${pct}%"></div></div>
+      <div class="meta-progress-info"><span>${meta.current} ${meta.unit||''}</span><span>${meta.target} ${meta.unit||''}</span></div>
+    </div>`;
+  } else {
+    document.getElementById('statMetaPercent').textContent = '—';
+    document.getElementById('overviewMeta').textContent = '—';
+    metaArea.innerHTML = '<div class="no-meta">Nenhuma meta. <a href="#" onclick="navigate(\'meta\')" style="color:var(--accent)">Definir meta.</a></div>';
+  }
+
+  // Shop preview
+  const shopArea = document.getElementById('homeShopArea');
+  const items = currentGuild.shopItems || [];
+  if (items.length === 0) {
+    shopArea.innerHTML = '<div class="no-meta" style="font-style:italic;color:var(--text3);padding:20px;">Nenhum item. <a href="#" onclick="navigate(\'loja\')" style="color:var(--accent);">Ir para Loja.</a></div>';
+  } else {
+    shopArea.innerHTML = '<div class="shop-grid">' + items.slice(0, 4).map(item => renderShopItemCard(item, false)).join('') + '</div>';
+  }
+}
+
+// ============= MEMBERS =============
+const roleColors = {
+  'Líder':    ['#f5c842','#3a2a00'],
+  'Co-Líder': ['#9b59b6','#2d0a40'],
+  'Veterano': ['#00c896','#004d38'],
+  'Membro':   ['#4a8fa8','#0d2d38'],
+};
+function getRoleColor(role) { return roleColors[role] || ['#7a8fa8','#1a2533']; }
+
+function renderMembers() {
+  if (!currentGuild) return;
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const filterRole = document.getElementById('filterRole').value;
+  const members = currentGuild.members || [];
+  const isEditor = canEdit();
+
+  // show/hide add button
+  document.getElementById('addMemberBtnWrap').style.display = isEditor ? '' : 'none';
+  const notice = document.getElementById('membersReadonlyNotice');
+  if (!isEditor) {
+    notice.innerHTML = '<div class="readonly-notice">📖 Modo leitura — apenas Líder e Co-Líder podem editar membros.</div>';
+  } else { notice.innerHTML = ''; }
+
+  // roles filter
+  const roles = [...new Set(members.map(m => m.role))].sort();
+  const filterEl = document.getElementById('filterRole');
+  const cv = filterEl.value;
+  filterEl.innerHTML = '<option value="">Todas as funções</option>' + roles.map(r => `<option value="${esc(r)}" ${r===cv?'selected':''}>${esc(r)}</option>`).join('');
+
+  let filtered = members;
+  if (search) filtered = filtered.filter(m => m.name.toLowerCase().includes(search) || m.id.toLowerCase().includes(search) || m.role.toLowerCase().includes(search));
+  if (filterRole) filtered = filtered.filter(m => m.role === filterRole);
+
+  const grid = document.getElementById('membersGrid');
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="no-members"><div class="no-members-icon">⚔️</div><div class="no-members-text">${members.length===0?'Nenhum membro ainda':'Sem resultados'}</div><div class="no-members-sub">${members.length===0?'Aguardando recrutas...':'Tente outro termo.'}</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(m => {
+    const [bg, fg] = getRoleColor(m.role);
+    const warnHtml = m.warnings > 0
+      ? `<div class="warnings-row"><span class="warning-count">⚠️ ${m.warnings} adv.</span><button class="warning-reason-btn" onclick="showWarningReason('${m.uid}')" title="Ver motivo">?</button></div>`
+      : `<span style="color:var(--text3);font-size:12px;font-style:italic;">Sem advertências</span>`;
+    const tagsArr = m.tags || [];
+    const tagsHtml = tagsArr.length > 0
+      ? `<div class="member-detail-row"><span class="member-detail-label">🏷️ Tags</span><span class="member-detail-value"><div class="tags-wrap" style="margin-top:0;">${tagsArr.map(t => { const cls = t.toLowerCase()==='apostadores'?' apostadores':''; return `<span class="tag-chip${cls}" style="cursor:default;">${esc(t)}</span>`; }).join('')}</div></span></div>`
+      : '';
+    const actionsHtml = isEditor
+      ? `<button class="btn btn-ghost btn-sm" onclick="openEditMember('${m.uid}')">✏️ Editar</button>
+         <button class="btn btn-danger btn-sm" onclick="confirmDeleteMember('${m.uid}')">🗑️ Remover</button>`
+      : '';
+    return `<div class="member-card">
+      <div class="member-card-header">
+        <div class="member-avatar" style="background:${bg}22;color:${bg};border-color:${bg}44">${m.name.charAt(0).toUpperCase()}</div>
+        <div class="member-card-info">
+          <div class="member-card-name">${esc(m.name)}</div>
+          <div class="member-card-id">${esc(m.id)}</div>
+        </div>
+        <span class="role-badge" style="background:${bg}22;color:${bg};border:1px solid ${bg}44">${esc(m.role)}</span>
+      </div>
+      <div class="member-details">
+        ${m.phone ? `<div class="member-detail-row"><span class="member-detail-label">📱 Cel</span><span class="member-detail-value">${esc(m.phone)}</span></div>` : ''}
+        ${m.notes ? `<div class="member-detail-row"><span class="member-detail-label">📝 Obs</span><span class="member-detail-value" style="font-size:12px;">${esc(m.notes)}</span></div>` : ''}
+        ${tagsHtml}
+        <div class="member-detail-row"><span class="member-detail-label">⚠️ Adv</span><span class="member-detail-value">${warnHtml}</span></div>
+      </div>
+      ${actionsHtml ? `<div class="member-card-actions">${actionsHtml}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('memberBadge').textContent = members.length;
+}
+
+function showWarningReason(uid_) {
+  const m = (currentGuild.members||[]).find(x => x.uid === uid_);
+  if (!m) return;
+  const text = m.warningReason ? m.warningReason : 'Nenhum motivo especificado.';
+  document.getElementById('warningReasonText').textContent = text;
+  document.getElementById('warningReasonModal').classList.add('open');
+}
+
+// ============= MEMBER TAGS =============
+let pendingTags = [];
+
+function renderTagsPreview() {
+  const wrap = document.getElementById('mTagsPreview');
+  if (!wrap) return;
+  wrap.innerHTML = pendingTags.length === 0
+    ? '<span style="color:var(--text3);font-size:11px;font-style:italic;">Nenhuma tag</span>'
+    : pendingTags.map((t, i) => {
+        const cls = t.toLowerCase() === 'apostadores' ? ' apostadores' : '';
+        return `<span class="tag-chip${cls}">${esc(t)}<button class="tag-chip-remove" onclick="removeTag(${i})">✕</button></span>`;
+      }).join('');
+}
+
+function addMemberTag() {
+  const input = document.getElementById('mTagInput');
+  const val = input.value.trim();
+  if (!val) return;
+  val.split(',').map(v => v.trim()).filter(Boolean).forEach(v => {
+    if (!pendingTags.includes(v)) pendingTags.push(v);
+  });
+  input.value = ''; renderTagsPreview();
+}
+
+function removeTag(idx) { pendingTags.splice(idx, 1); renderTagsPreview(); }
+
+function openAddMember() {
+  if (!canEdit()) return;
+  pendingTags = [];
+  document.getElementById('memberModalTitle').textContent = '➕ Adicionar Membro';
+  document.getElementById('editMemberId').value = '';
+  document.getElementById('mName').value = '';
+  document.getElementById('mId').value = '#' + String((currentGuild.members||[]).length + 1).padStart(4,'0');
+  document.getElementById('mPhone').value = '';
+  document.getElementById('mRole').value = '';
+  document.getElementById('mRoleCustom').value = '';
+  document.getElementById('mNotes').value = '';
+  document.getElementById('mWarnings').value = '0';
+  document.getElementById('mWarningReason').value = '';
+  document.getElementById('mTagInput').value = '';
+  renderTagsPreview();
+  document.getElementById('memberModal').classList.add('open');
+}
+
+function openEditMember(uid_) {
+  if (!canEdit()) return;
+  const m = (currentGuild.members||[]).find(x => x.uid === uid_);
+  if (!m) return;
+  pendingTags = [...(m.tags || [])];
+  document.getElementById('memberModalTitle').textContent = '✏️ Editar Membro';
+  document.getElementById('editMemberId').value = uid_;
+  document.getElementById('mName').value = m.name;
+  document.getElementById('mId').value = m.id;
+  document.getElementById('mPhone').value = m.phone||'';
+  const knownRoles = ['Líder','Co-Líder','Veterano','Membro'];
+  if (knownRoles.includes(m.role)) { document.getElementById('mRole').value = m.role; document.getElementById('mRoleCustom').value = ''; }
+  else { document.getElementById('mRole').value = 'Personalizado'; document.getElementById('mRoleCustom').value = m.role; }
+  document.getElementById('mNotes').value = m.notes||'';
+  document.getElementById('mWarnings').value = m.warnings||0;
+  document.getElementById('mWarningReason').value = m.warningReason||'';
+  document.getElementById('mTagInput').value = '';
+  renderTagsPreview();
+  document.getElementById('memberModal').classList.add('open');
+}
+
+function closeMemberModal() { document.getElementById('memberModal').classList.remove('open'); }
+
+async function saveMember() {
+  const name = document.getElementById('mName').value.trim();
+  const id = document.getElementById('mId').value.trim();
+  const phone = document.getElementById('mPhone').value.trim();
+  let role = document.getElementById('mRole').value;
+  const roleCustom = document.getElementById('mRoleCustom').value.trim();
+  const notes = document.getElementById('mNotes').value.trim();
+  const warnings = parseInt(document.getElementById('mWarnings').value)||0;
+  const warningReason = document.getElementById('mWarningReason').value.trim();
+  const tags = [...pendingTags];
+
+  if (!name) { toast('Digite o nome.', 'error'); return; }
+  if (!id) { toast('Digite o ID.', 'error'); return; }
+  if (!role) { toast('Selecione a função.', 'error'); return; }
+  if (role === 'Personalizado' && !roleCustom) { toast('Digite a função personalizada.', 'error'); return; }
+  if (role === 'Personalizado') role = roleCustom;
+
+  const editId = document.getElementById('editMemberId').value;
+  if (!currentGuild.members) currentGuild.members = [];
+
+  if (editId) {
+    const idx = currentGuild.members.findIndex(m => m.uid === editId);
+    if (idx !== -1) currentGuild.members[idx] = { ...currentGuild.members[idx], name, id, phone, role, tags, notes, warnings, warningReason };
+    // Refresh currentUser if editing self
+    if (editId === currentUser.uid) { currentUser.tags = tags; currentUser.role = role; currentUser.isLeader = role==='Líder'; currentUser.isCoLeader = role==='Co-Líder'; saveSession(); updateSidebarUI(); }
+    toast('✅ Membro atualizado!', 'success');
+  } else {
+    if (currentGuild.members.some(m => m.id === id)) { toast('ID já existe.', 'error'); return; }
+    currentGuild.members.push({ uid: uid(), name, id, phone, role, tags, notes, warnings, warningReason });
+    toast('✅ Membro adicionado!', 'success');
+  }
+
+  await saveGuild();
+  closeMemberModal();
+  renderMembers();
+}
+
+let pendingDeleteFn = null;
+function confirmDeleteMember(uid_) {
+  const m = (currentGuild.members||[]).find(x => x.uid === uid_);
+  if (!m) return;
+  document.getElementById('confirmText').innerHTML = `Remover <strong>${esc(m.name)}</strong> da guilda?`;
+  pendingDeleteFn = async () => { currentGuild.members = currentGuild.members.filter(x => x.uid !== uid_); await saveGuild(); renderMembers(); toast('Membro removido.', 'success'); };
+  document.getElementById('confirmBtn').onclick = () => { pendingDeleteFn(); closeConfirm(); };
+  document.getElementById('confirmModal').classList.add('open');
+}
+function closeConfirm() { document.getElementById('confirmModal').classList.remove('open'); }
+
+// ============= AVISOS =============
+const avisoTypes = {
+  info:    { label:'📋 Informação', bg:'rgba(74,143,168,0.15)', color:'#4a8fa8', border:'rgba(74,143,168,0.3)' },
+  alerta:  { label:'⚠️ Alerta',    bg:'rgba(245,200,66,0.12)', color:'#f5c842', border:'rgba(245,200,66,0.3)' },
+  evento:  { label:'🎉 Evento',    bg:'rgba(46,204,113,0.12)', color:'#2ecc71', border:'rgba(46,204,113,0.3)' },
+  urgente: { label:'🚨 Urgente',   bg:'rgba(224,64,96,0.12)',  color:'#e04060', border:'rgba(224,64,96,0.3)' },
+};
+
+function renderAvisos() {
+  const isEditor = canEdit();
+  const wrap = document.getElementById('addAvisoBtnWrap');
+  wrap.innerHTML = isEditor ? '<button class="btn btn-primary" onclick="openAddAviso()">📢 Novo Aviso</button>' : '';
+  const notice = document.getElementById('avisosReadonlyNotice');
+  notice.innerHTML = !isEditor ? '<div class="readonly-notice">📖 Somente Líder e Co-Líder podem publicar avisos.</div>' : '';
+
+  const avisos = currentGuild.avisos || [];
+  const list = document.getElementById('avisosList');
+  if (avisos.length === 0) { list.innerHTML = '<div class="no-avisos">Nenhum aviso publicado ainda.</div>'; return; }
+
+  list.innerHTML = [...avisos].reverse().map(a => {
+    const t = avisoTypes[a.type] || avisoTypes.info;
+    const date = new Date(a.createdAt).toLocaleDateString('pt-BR') + ' ' + new Date(a.createdAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="aviso-card">
+      <div class="aviso-header">
+        <span class="aviso-type-badge" style="background:${t.bg};color:${t.color};border:1px solid ${t.border}">${t.label}</span>
+        <div>
+          <div class="aviso-title">${esc(a.title)}</div>
+          <div class="aviso-meta">Por ${esc(a.author)} · ${date}</div>
+        </div>
+      </div>
+      <div class="aviso-body">${esc(a.text)}</div>
+      ${isEditor ? `<div class="aviso-actions"><button class="btn btn-danger btn-sm" onclick="deleteAviso('${a.uid}')">🗑️ Remover</button></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function openAddAviso() {
+  document.getElementById('avisoModalTitle').textContent = '📢 Novo Aviso';
+  document.getElementById('editAvisoId').value = '';
+  document.getElementById('avisoTitle').value = '';
+  document.getElementById('avisoType').value = 'info';
+  document.getElementById('avisoText').value = '';
+  document.getElementById('avisoModal').classList.add('open');
+}
+
+function closeAvisoModal() { document.getElementById('avisoModal').classList.remove('open'); }
+
+async function saveAviso() {
+  const title = document.getElementById('avisoTitle').value.trim();
+  const text = document.getElementById('avisoText').value.trim();
+  const type = document.getElementById('avisoType').value;
+  if (!title) { toast('Digite o título.', 'error'); return; }
+  if (!text) { toast('Escreva a mensagem.', 'error'); return; }
+  if (!currentGuild.avisos) currentGuild.avisos = [];
+  currentGuild.avisos.push({ uid: uid(), title, text, type, author: currentUser.name, createdAt: Date.now() });
+  await saveGuild();
+  closeAvisoModal();
+  renderAvisos();
+  toast('📢 Aviso publicado!', 'success');
+}
+
+async function deleteAviso(uid_) {
+  currentGuild.avisos = (currentGuild.avisos||[]).filter(a => a.uid !== uid_);
+  await saveGuild();
+  renderAvisos();
+  toast('Aviso removido.', 'success');
+}
+
+// ============= SHOP CART =============
+let cart = []; // [{uid, name, price, buyLink}]
+
+function addToCart(itemUid) {
+  const item = (currentGuild.shopItems||[]).find(x => x.uid === itemUid);
+  if (!item) return;
+  if (cart.find(c => c.uid === itemUid)) { toast('Item já está no carrinho.', 'error'); return; }
+  cart.push({ uid: item.uid, name: item.name, price: item.price, buyLink: item.buyLink||'' });
+  updateCartBar();
+  toast('🛒 Adicionado ao carrinho!', 'success');
+}
+
+function removeFromCart(itemUid) {
+  cart = cart.filter(c => c.uid !== itemUid);
+  updateCartBar();
+}
+
+function clearCart() {
+  cart = [];
+  updateCartBar();
+}
+
+function updateCartBar() {
+  const bar = document.getElementById('cartBar');
+  const activePage = document.querySelector('.page.active');
+  const isLoja = activePage && activePage.id === 'page-loja';
+  if (cart.length === 0 || !isLoja) { bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  document.getElementById('cartBarItems').innerHTML = cart.map(c =>
+    `<span class="cart-item-chip">${esc(c.name)} <button class="cart-chip-remove" onclick="removeFromCart('${c.uid}')">✕</button></span>`
+  ).join('');
+}
+
+function checkoutCart() {
+  if (cart.length === 0) return;
+  // If single item with link, go directly. If multiple, show summary
+  const withLinks = cart.filter(c => c.buyLink);
+  if (cart.length === 1 && cart[0].buyLink) {
+    window.open(cart[0].buyLink, '_blank');
+    return;
+  }
+  const text = `Itens no carrinho:<br><br>` + cart.map(c =>
+    `• <strong>${esc(c.name)}</strong> — ${esc(c.price)}${c.buyLink ? ` <a href="${esc(c.buyLink)}" target="_blank" style="color:var(--accent)">🔗 Comprar</a>` : ' (sem link)'}`
+  ).join('<br>');
+  document.getElementById('checkoutText').innerHTML = text;
+  document.getElementById('checkoutGoBtn').style.display = withLinks.length === 1 ? '' : 'none';
+  if (withLinks.length === 1) {
+    document.getElementById('checkoutGoBtn').onclick = () => { window.open(withLinks[0].buyLink, '_blank'); };
+  }
+  document.getElementById('checkoutModal').classList.add('open');
+}
+
+// ============= SHOP =============
+function renderShopItemCard(item, showActions) {
+  const buyBtn = `<button class="shop-buy-btn" onclick="addToCart('${item.uid}')">🛒 Comprar</button>`;
+  return `<div class="shop-item">
+    <div class="shop-item-img">${item.imageData ? `<img src="${item.imageData}" alt="${esc(item.name)}">` : '🛡️'}</div>
+    <div class="shop-item-body">
+      <div class="shop-item-name">${esc(item.name)}</div>
+      <div class="shop-item-price">${esc(item.price)}</div>
+      ${item.desc ? `<div class="shop-item-desc">${esc(item.desc)}</div>` : ''}
+    </div>
+    <div class="shop-item-actions">
+      ${buyBtn}
+      ${showActions && canEdit() ? `<button class="btn btn-ghost btn-sm" onclick="openEditShopItem('${item.uid}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteShopItem('${item.uid}')">🗑️</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderShop() {
+  const isEditor = canEdit();
+  document.getElementById('addItemBtnWrap').innerHTML = isEditor ? '<button class="btn btn-primary" onclick="openAddShopItem()">➕ Novo Item</button>' : '';
+  document.getElementById('lojaReadonlyNotice').innerHTML = !isEditor ? '<div class="readonly-notice">📖 Somente Líder e Co-Líder podem gerenciar a loja.</div>' : '';
+  const items = currentGuild.shopItems || [];
+  const grid = document.getElementById('shopGrid');
+  if (items.length === 0) { grid.innerHTML = '<div class="no-meta" style="grid-column:1/-1;text-align:center;padding:50px;color:var(--text3);font-style:italic;">Nenhum item cadastrado.</div>'; return; }
+  grid.innerHTML = items.map(item => renderShopItemCard(item, true)).join('');
+}
+
+function openAddShopItem() {
+  document.getElementById('shopItemModalTitle').textContent = '🏪 Novo Item';
+  document.getElementById('editItemId').value = '';
+  document.getElementById('itemName').value = '';
+  document.getElementById('itemPrice').value = '';
+  document.getElementById('itemDesc').value = '';
+  document.getElementById('itemBuyLink').value = '';
+  document.getElementById('itemImageData').value = '';
+  document.getElementById('itemImagePreview').style.display = 'none';
+  document.getElementById('itemImageFile').value = '';
+  document.getElementById('shopItemModal').classList.add('open');
+}
+
+function openEditShopItem(uid_) {
+  const item = (currentGuild.shopItems||[]).find(x => x.uid === uid_);
+  if (!item) return;
+  document.getElementById('shopItemModalTitle').textContent = '✏️ Editar Item';
+  document.getElementById('editItemId').value = uid_;
+  document.getElementById('itemName').value = item.name;
+  document.getElementById('itemPrice').value = item.price;
+  document.getElementById('itemDesc').value = item.desc||'';
+  document.getElementById('itemBuyLink').value = item.buyLink||'';
+  document.getElementById('itemImageData').value = item.imageData||'';
+  if (item.imageData) {
+    document.getElementById('itemImagePreviewImg').src = item.imageData;
+    document.getElementById('itemImagePreview').style.display = 'block';
+  } else { document.getElementById('itemImagePreview').style.display = 'none'; }
+  document.getElementById('shopItemModal').classList.add('open');
+}
+
+function closeShopItemModal() { document.getElementById('shopItemModal').classList.remove('open'); }
+
+function previewItemImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('itemImageData').value = e.target.result;
+    document.getElementById('itemImagePreviewImg').src = e.target.result;
+    document.getElementById('itemImagePreview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearItemImage() {
+  document.getElementById('itemImageData').value = '';
+  document.getElementById('itemImagePreview').style.display = 'none';
+  document.getElementById('itemImageFile').value = '';
+}
+
+async function saveShopItem() {
+  const name = document.getElementById('itemName').value.trim();
+  const price = document.getElementById('itemPrice').value.trim();
+  const desc = document.getElementById('itemDesc').value.trim();
+  const buyLink = document.getElementById('itemBuyLink').value.trim();
+  const imageData = document.getElementById('itemImageData').value;
+  const editId = document.getElementById('editItemId').value;
+  if (!name) { toast('Digite o nome do item.', 'error'); return; }
+  if (!price) { toast('Digite o preço.', 'error'); return; }
+  if (!currentGuild.shopItems) currentGuild.shopItems = [];
+  if (editId) {
+    const idx = currentGuild.shopItems.findIndex(x => x.uid === editId);
+    if (idx !== -1) currentGuild.shopItems[idx] = { ...currentGuild.shopItems[idx], name, price, desc, buyLink, imageData };
+    toast('✅ Item atualizado!', 'success');
+  } else {
+    currentGuild.shopItems.push({ uid: uid(), name, price, desc, buyLink, imageData });
+    toast('✅ Item adicionado!', 'success');
+  }
+  await saveGuild();
+  closeShopItemModal();
+  renderShop();
+}
+
+async function deleteShopItem(uid_) {
+  currentGuild.shopItems = (currentGuild.shopItems||[]).filter(x => x.uid !== uid_);
+  await saveGuild();
+  renderShop();
+  toast('Item removido.', 'success');
+}
+
+// ============= ORGS =============
+function canManageOrgs() {
+  if (!currentUser) return false;
+  if (currentUser.isLeader || currentUser.isCoLeader) return true;
+  return (currentUser.tags || []).some(t => t.toLowerCase() === 'apostadores');
+}
+
+function renderOrgs() {
+  const canAdd = canManageOrgs();
+  document.getElementById('addOrgBtnWrap').innerHTML = canAdd
+    ? '<button class="btn btn-primary" onclick="openAddOrg()">🏛️ Adicionar Org</button>' : '';
+  document.getElementById('orgsReadonlyNotice').innerHTML = !canAdd
+    ? '<div class="readonly-notice">🔒 Somente membros com cargo <strong>Apostadores</strong> podem adicionar organizações.</div>' : '';
+
+  const orgs = currentGuild.orgs || [];
+  const grid = document.getElementById('orgsGrid');
+  if (orgs.length === 0) {
+    grid.innerHTML = '<div class="no-orgs">⚔️ Nenhuma organização cadastrada ainda.</div>'; return;
+  }
+  grid.innerHTML = orgs.map(org => {
+    const imgHtml = org.imageData
+      ? `<img src="${org.imageData}" alt="${esc(org.name)}">`
+      : '<div class="org-card-banner-placeholder">🏛️</div>';
+    const discordAttr = org.discordLink ? `href="${esc(org.discordLink)}" target="_blank"` : '';
+    return `<div class="org-card">
+      <a class="org-card-banner" ${discordAttr} title="Entrar no Discord da ${esc(org.name)}">
+        ${imgHtml}
+        <div class="org-card-banner-overlay">
+          <div class="org-banner-discord-hint">💬 Entrar no Discord</div>
+        </div>
+      </a>
+      <div class="org-card-body">
+        <div class="org-card-name">${esc(org.name)}</div>
+        ${org.desc ? `<div class="org-card-desc">${esc(org.desc)}</div>` : ''}
+      </div>
+      <div class="org-card-footer">
+        ${org.discordLink ? `<a class="discord-link-btn" href="${esc(org.discordLink)}" target="_blank">💬 Discord</a>` : '<span style="color:var(--text3);font-size:12px;font-style:italic;">Sem link</span>'}
+        ${canAdd ? `<div style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" onclick="openEditOrg('${org.uid}')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteOrg('${org.uid}')">🗑️</button></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAddOrg() {
+  document.getElementById('orgModalTitle').textContent = '🏛️ Nova Organização';
+  document.getElementById('editOrgId').value = '';
+  document.getElementById('orgName').value = '';
+  document.getElementById('orgDesc').value = '';
+  document.getElementById('orgDiscord').value = '';
+  document.getElementById('orgImageData').value = '';
+  document.getElementById('orgImagePreview').style.display = 'none';
+  document.getElementById('orgImageFile').value = '';
+  document.getElementById('orgModal').classList.add('open');
+}
+
+function openEditOrg(uid_) {
+  const org = (currentGuild.orgs||[]).find(x => x.uid === uid_);
+  if (!org) return;
+  document.getElementById('orgModalTitle').textContent = '✏️ Editar Org';
+  document.getElementById('editOrgId').value = uid_;
+  document.getElementById('orgName').value = org.name;
+  document.getElementById('orgDesc').value = org.desc||'';
+  document.getElementById('orgDiscord').value = org.discordLink||'';
+  document.getElementById('orgImageData').value = org.imageData||'';
+  if (org.imageData) {
+    document.getElementById('orgImagePreviewImg').src = org.imageData;
+    document.getElementById('orgImagePreview').style.display = 'block';
+  } else { document.getElementById('orgImagePreview').style.display = 'none'; }
+  document.getElementById('orgModal').classList.add('open');
+}
+
+function closeOrgModal() { document.getElementById('orgModal').classList.remove('open'); }
+
+function previewOrgImage(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('orgImageData').value = e.target.result;
+    document.getElementById('orgImagePreviewImg').src = e.target.result;
+    document.getElementById('orgImagePreview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearOrgImage() {
+  document.getElementById('orgImageData').value = '';
+  document.getElementById('orgImagePreview').style.display = 'none';
+  document.getElementById('orgImageFile').value = '';
+}
+
+async function saveOrg() {
+  const name = document.getElementById('orgName').value.trim();
+  const desc = document.getElementById('orgDesc').value.trim();
+  const discordLink = document.getElementById('orgDiscord').value.trim();
+  const imageData = document.getElementById('orgImageData').value;
+  const editId = document.getElementById('editOrgId').value;
+  if (!name) { toast('Digite o nome da org.', 'error'); return; }
+  if (!currentGuild.orgs) currentGuild.orgs = [];
+  if (editId) {
+    const idx = currentGuild.orgs.findIndex(x => x.uid === editId);
+    if (idx !== -1) currentGuild.orgs[idx] = { ...currentGuild.orgs[idx], name, desc, discordLink, imageData };
+    toast('✅ Org atualizada!', 'success');
+  } else {
+    currentGuild.orgs.push({ uid: uid(), name, desc, discordLink, imageData });
+    toast('✅ Org adicionada!', 'success');
+  }
+  await saveGuild();
+  closeOrgModal();
+  renderOrgs();
+}
+
+async function deleteOrg(uid_) {
+  currentGuild.orgs = (currentGuild.orgs||[]).filter(x => x.uid !== uid_);
+  await saveGuild();
+  renderOrgs();
+  toast('Org removida.', 'success');
+}
+
+// ============= TIMES =============
+const TIME_COLORS = {
+  gold:   { bg:'#c8a041', text:'#1a0e00', glow:'rgba(200,160,65,0.5)' },
+  red:    { bg:'#e04060', text:'#fff',    glow:'rgba(224,64,96,0.5)' },
+  blue:   { bg:'#1a8fff', text:'#fff',    glow:'rgba(26,143,255,0.5)' },
+  green:  { bg:'#2ecc71', text:'#fff',    glow:'rgba(46,204,113,0.5)' },
+  purple: { bg:'#9b59b6', text:'#fff',    glow:'rgba(155,89,182,0.5)' },
+  orange: { bg:'#f39c12', text:'#1a0a00', glow:'rgba(243,156,18,0.5)' },
+  cyan:   { bg:'#00b4d8', text:'#fff',    glow:'rgba(0,180,216,0.5)' },
+  pink:   { bg:'#e91e8c', text:'#fff',    glow:'rgba(233,30,140,0.5)' },
+};
+
+let pendingTimeMembers = []; // array of member UIDs selected
+
+function renderTimes() {
+  const times = currentGuild.times || [];
+  const grid = document.getElementById('timesGrid');
+  const badge = document.getElementById('timesBadge');
+  if (badge) { badge.style.display = times.length > 0 ? '' : 'none'; badge.textContent = times.length; }
+
+  if (times.length === 0) {
+    grid.innerHTML = '<div class="no-times">⚔️ Nenhum time criado ainda. Clique em "Criar Time" para começar!</div>';
+    return;
+  }
+
+  grid.innerHTML = times.map(t => {
+    const col = TIME_COLORS[t.color] || TIME_COLORS.gold;
+    const members = (currentGuild.members || []).filter(m => (t.memberUids || []).includes(m.uid));
+    const [bgRole] = getRoleColor('Membro');
+    const actionsHtml = canEdit()
+      ? `<div class="time-card-actions">
+           <button class="btn btn-ghost btn-sm" onclick="openEditTime('${t.uid}')">✏️ Editar</button>
+           <button class="btn btn-danger btn-sm" onclick="deleteTime('${t.uid}')">🗑️ Remover</button>
+         </div>` : '';
+    return `<div class="time-card">
+      <div class="time-card-top" style="background:${col.bg};box-shadow:0 0 10px ${col.glow};"></div>
+      <div class="time-card-body">
+        <div class="time-card-header">
+          <div class="time-card-icon" style="background:${col.bg}22;border:2px solid ${col.bg}55;color:${col.bg};">⚔️</div>
+          <div>
+            <div class="time-card-name">${esc(t.name)}</div>
+            <div class="time-card-meta">${members.length} membro${members.length !== 1 ? 's' : ''}</div>
+          </div>
+        </div>
+        ${t.desc ? `<div class="time-card-desc">${esc(t.desc)}</div>` : ''}
+        <div class="time-members-list">
+          ${members.length === 0
+            ? '<div style="color:var(--text3);font-size:12px;font-style:italic;padding:6px 0;">Nenhum membro adicionado</div>'
+            : members.map(m => {
+                const [mbg] = getRoleColor(m.role);
+                return `<div class="time-member-row">
+                  <div class="time-member-avatar" style="background:${mbg}22;color:${mbg};border:1px solid ${mbg}44">${m.name.charAt(0).toUpperCase()}</div>
+                  <div class="time-member-name">${esc(m.name)}</div>
+                  <div class="time-member-role">${esc(m.role)}</div>
+                </div>`;
+              }).join('')}
+        </div>
+      </div>
+      ${actionsHtml}
+    </div>`;
+  }).join('');
+}
+
+function openAddTime() {
+  pendingTimeMembers = [];
+  document.getElementById('timeModalTitle').textContent = '⚔️ Criar Time';
+  document.getElementById('editTimeId').value = '';
+  document.getElementById('timeName').value = '';
+  document.getElementById('timeColor').value = 'gold';
+  document.getElementById('timeDesc').value = '';
+  document.getElementById('timeMemberSearch').value = '';
+  renderTimeMemberPicker();
+  document.getElementById('timeModal').classList.add('open');
+}
+
+function openEditTime(uid_) {
+  const t = (currentGuild.times || []).find(x => x.uid === uid_);
+  if (!t) return;
+  pendingTimeMembers = [...(t.memberUids || [])];
+  document.getElementById('timeModalTitle').textContent = '✏️ Editar Time';
+  document.getElementById('editTimeId').value = uid_;
+  document.getElementById('timeName').value = t.name;
+  document.getElementById('timeColor').value = t.color || 'gold';
+  document.getElementById('timeDesc').value = t.desc || '';
+  document.getElementById('timeMemberSearch').value = '';
+  renderTimeMemberPicker();
+  document.getElementById('timeModal').classList.add('open');
+}
+
+function closeTimeModal() {
+  document.getElementById('timeModal').classList.remove('open');
+  pendingTimeMembers = [];
+}
+
+function renderTimeMemberPicker() {
+  const search = (document.getElementById('timeMemberSearch')?.value || '').toLowerCase();
+  const members = (currentGuild.members || []).filter(m =>
+    !search || m.name.toLowerCase().includes(search) || m.role.toLowerCase().includes(search)
+  );
+  const list = document.getElementById('timeMemberList');
+  if (members.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-style:italic;">Nenhum membro encontrado</div>';
+  } else {
+    list.innerHTML = members.map(m => {
+      const [bg] = getRoleColor(m.role);
+      const sel = pendingTimeMembers.includes(m.uid) ? ' selected' : '';
+      return `<div class="time-member-option${sel}" onclick="toggleTimeMember('${m.uid}')">
+        <div class="time-pick-avatar" style="background:${bg}22;color:${bg};border:1px solid ${bg}44">${m.name.charAt(0).toUpperCase()}</div>
+        <div class="time-pick-info">
+          <div class="time-pick-name">${esc(m.name)}</div>
+          <div class="time-pick-role">${esc(m.role)}${(m.tags||[]).length ? ' · ' + m.tags.map(t=>esc(t)).join(', ') : ''}</div>
+        </div>
+        <div class="time-pick-check">✓</div>
+      </div>`;
+    }).join('');
+  }
+  renderTimeSelectedPreview();
+}
+
+function filterTimeMemberList() {
+  renderTimeMemberPicker();
+}
+
+function toggleTimeMember(uid_) {
+  const idx = pendingTimeMembers.indexOf(uid_);
+  if (idx === -1) pendingTimeMembers.push(uid_);
+  else pendingTimeMembers.splice(idx, 1);
+  renderTimeMemberPicker();
+}
+
+function renderTimeSelectedPreview() {
+  const preview = document.getElementById('timeSelectedPreview');
+  if (!preview) return;
+  if (pendingTimeMembers.length === 0) { preview.innerHTML = ''; return; }
+  const names = pendingTimeMembers.map(uid_ => {
+    const m = (currentGuild.members || []).find(x => x.uid === uid_);
+    return m ? `<span class="time-chip">${esc(m.name)}</span>` : '';
+  }).filter(Boolean).join('');
+  preview.innerHTML = `<div class="time-selected-label">✅ Selecionados (${pendingTimeMembers.length})</div><div class="time-selected-chips">${names}</div>`;
+}
+
+async function saveTime() {
+  const name = document.getElementById('timeName').value.trim();
+  const color = document.getElementById('timeColor').value;
+  const desc = document.getElementById('timeDesc').value.trim();
+  const editId = document.getElementById('editTimeId').value;
+
+  if (!name) { toast('Digite o nome do time.', 'error'); return; }
+  if (pendingTimeMembers.length === 0) { toast('Selecione ao menos um membro.', 'error'); return; }
+
+  if (!currentGuild.times) currentGuild.times = [];
+
+  if (editId) {
+    const idx = currentGuild.times.findIndex(x => x.uid === editId);
+    if (idx !== -1) currentGuild.times[idx] = { ...currentGuild.times[idx], name, color, desc, memberUids: [...pendingTimeMembers] };
+    toast('✅ Time atualizado!', 'success');
+  } else {
+    currentGuild.times.push({ uid: uid(), name, color, desc, memberUids: [...pendingTimeMembers], createdAt: Date.now() });
+    toast('⚔️ Time criado!', 'success');
+  }
+
+  await saveGuild();
+  closeTimeModal();
+  renderTimes();
+}
+
+async function deleteTime(uid_) {
+  currentGuild.times = (currentGuild.times || []).filter(x => x.uid !== uid_);
+  await saveGuild();
+  renderTimes();
+  toast('Time removido.', 'success');
+}
+
+// ============= META =============
+function loadMetaForm() {
+  const isEditor = canEdit();
+  document.getElementById('metaReadonlyNotice').innerHTML = !isEditor ? '<div class="readonly-notice">📖 Somente Líder e Co-Líder podem editar a meta.</div>' : '';
+  const inputs = document.getElementById('metaConfigCard').querySelectorAll('input,textarea,button');
+  inputs.forEach(el => el.disabled = !isEditor);
+  const meta = currentGuild.meta;
+  if (meta) {
+    document.getElementById('metaName').value = meta.name||'';
+    document.getElementById('metaCurrent').value = meta.current||0;
+    document.getElementById('metaTarget').value = meta.target||'';
+    document.getElementById('metaUnit').value = meta.unit||'';
+    document.getElementById('metaDesc').value = meta.desc||'';
+  }
+}
+
+async function saveMeta() {
+  const name = document.getElementById('metaName').value.trim();
+  const current = parseFloat(document.getElementById('metaCurrent').value)||0;
+  const target = parseFloat(document.getElementById('metaTarget').value);
+  const unit = document.getElementById('metaUnit').value.trim();
+  const desc = document.getElementById('metaDesc').value.trim();
+  if (!name) { toast('Digite o nome.', 'error'); return; }
+  if (!target || target <= 0) { toast('Digite o valor objetivo.', 'error'); return; }
+  currentGuild.meta = { name, current, target, unit, desc };
+  await saveGuild();
+  toast('🎯 Meta salva!', 'success');
+}
+
+async function clearMeta() {
+  currentGuild.meta = null;
+  await saveGuild();
+  document.getElementById('metaName').value='';
+  document.getElementById('metaCurrent').value='';
+  document.getElementById('metaTarget').value='';
+  document.getElementById('metaUnit').value='';
+  document.getElementById('metaDesc').value='';
+  toast('Meta removida.', 'success');
+}
+
+// ============= USERNAME =============
+function openEditUsername() {
+  document.getElementById('newUsername').value = currentUser.name;
+  document.getElementById('usernameModal').classList.add('open');
+  setTimeout(() => document.getElementById('newUsername').focus(), 100);
+}
+function closeUsernameModal() { document.getElementById('usernameModal').classList.remove('open'); }
+async function saveUsername() {
+  const val = document.getElementById('newUsername').value.trim();
+  if (!val) { toast('Digite um nome.', 'error'); return; }
+  currentUser.name = val;
+  // Update in members array
+  if (currentGuild) {
+    const m = currentGuild.members.find(x => x.uid === currentUser.uid);
+    if (m) m.name = val;
+    await saveGuild();
+  }
+  saveSession();
+  updateSidebarUI();
+  toast('✅ Nome atualizado!', 'success');
+  closeUsernameModal();
+}
+
+// ============= UTILS =============
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type; el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+document.getElementById('newUsername').addEventListener('keydown', e => { if (e.key === 'Enter') saveUsername(); });
+document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('loginGuildCode').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('loginName').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('regPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
+document.getElementById('mTagInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addMemberTag(); } });
+
+// ============= INIT =============
+setTheme('default', false);
+(async () => {
+  const session = getSession();
+  if (session && session.guildKey) {
+    const data = await loadGuildById(session.guildKey);
+    if (data) {
+      currentGuild = data;
+      currentGuildKey = session.guildKey;
+      currentUser = session.user;
+      const member = data.members.find(m => m.uid === session.user.uid);
+      if (member) {
+        currentUser.role = member.role;
+        currentUser.tags = member.tags || [];
+        currentUser.isLeader = member.role === 'Líder';
+        currentUser.isCoLeader = member.role === 'Co-Líder';
+        enterApp();
+        return;
+      }
+    }
+  }
+  document.getElementById('loginScreen').style.display = 'flex';
+})();
+</script>
+</body>
+</html>

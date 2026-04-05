@@ -861,21 +861,22 @@ body {
       <!-- LOGIN PANEL -->
       <div class="login-panel active" id="panelLogin">
         <div class="form-group">
-          <label class="form-label">URL Firebase (1ª vez neste dispositivo)</label>
+          <label class="form-label">URL Firebase <span style="color:var(--text3);font-size:10px;">(1ª vez neste dispositivo)</span></label>
           <input class="form-input" type="url" id="loginFirebaseUrl" placeholder="https://seu-projeto-default-rtdb.firebaseio.com">
-          <div style="font-size:10px;color:var(--text3);margin-top:3px;">Peça ao Líder a URL do Firebase. Após entrar uma vez, não precisa mais.</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:3px;">Peça ao Líder. Após entrar uma vez, não precisa mais.</div>
         </div>
         <div class="form-group">
-          <label class="form-label">Nome / Código da Guilda</label>
+          <label class="form-label">Nome ou Código da Guilda</label>
           <input class="form-input" type="text" id="loginGuildCode" placeholder="Nome, abreviação ou código UUID">
         </div>
         <div class="form-group">
           <label class="form-label">Seu Nome de Personagem</label>
-          <input class="form-input" type="text" id="loginName" placeholder="Nome no jogo">
+          <input class="form-input" type="text" id="loginName" placeholder="Exatamente como o Líder cadastrou">
         </div>
         <div class="form-group">
-          <label class="form-label">Senha da Guilda</label>
-          <input class="form-input" type="password" id="loginPassword" placeholder="Senha definida pelo líder">
+          <label class="form-label">Sua Senha Pessoal</label>
+          <input class="form-input" type="password" id="loginPassword" placeholder="Senha que o Líder definiu para você">
+          <div style="font-size:10px;color:var(--text3);margin-top:3px;">Cada membro tem sua própria senha — peça ao Líder se não souber.</div>
         </div>
         <div class="login-error" id="loginError"></div>
         <button class="login-btn" onclick="doLogin()">⚔️ ENTRAR NA GUILDA</button>
@@ -901,12 +902,18 @@ body {
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Senha da Guilda *</label>
-          <input class="form-input" type="password" id="regPassword" placeholder="Defina a senha de acesso">
+          <label class="form-label">Senha Mestre da Guilda *</label>
+          <input class="form-input" type="password" id="regPassword" placeholder="Senha usada para criar novos membros">
+          <div style="font-size:10px;color:var(--text3);margin-top:3px;">Esta senha é usada <strong>só pelo Líder</strong> para registrar a guilda. Cada membro terá sua própria senha.</div>
         </div>
         <div class="form-group">
           <label class="form-label">Seu Nome (Líder) *</label>
           <input class="form-input" type="text" id="regLeaderName" placeholder="Seu nome de personagem">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sua Senha Pessoal (Líder) *</label>
+          <input class="form-input" type="password" id="regLeaderPassword" placeholder="Sua senha pessoal para entrar no painel">
+          <div style="font-size:10px;color:var(--text3);margin-top:3px;">Diferente da senha mestre — esta é só sua para fazer login.</div>
         </div>
         <div class="login-error" id="registerError"></div>
         <button class="login-btn" id="regBtn" onclick="doRegister()">🏰 FUNDAR A GUILDA</button>
@@ -1276,6 +1283,14 @@ body {
       <div class="form-group">
         <label class="form-label">Observações</label>
         <textarea class="form-textarea" id="mNotes" placeholder="Anotações sobre o membro..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">🔑 Senha do Membro *</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input class="form-input" type="text" id="mPassword" placeholder="Senha que o membro vai usar para entrar" style="flex:1;">
+          <button class="btn btn-ghost btn-sm" type="button" onclick="generateMemberPassword()" title="Gerar senha aleatória">🎲</button>
+        </div>
+        <div class="form-hint">O membro usa essa senha junto com o nome para entrar. Guarde e repasse a ele.</div>
       </div>
       <div class="form-group">
         <label class="form-label">Tags do Membro</label>
@@ -1895,13 +1910,19 @@ async function doRegister() {
     err.textContent = '⚔️ Já existe uma guilda com esse nome ou abreviação!'; err.classList.add('show'); return;
   }
 
+  const leaderPersonalPass = document.getElementById('regLeaderPassword').value;
+  if (!leaderPersonalPass) {
+    regBtn.textContent = '🏰 FUNDAR A GUILDA'; regBtn.disabled = false;
+    err.textContent = 'Digite sua senha pessoal de Líder.'; err.classList.add('show'); return;
+  }
   const passHash = await hashStr(pass);
+  const leaderPassHash = await hashStr(leaderPersonalPass);
   const guildId = generateUUID();
   const leaderUid = uid();
 
   const newGuild = {
     guildId, name, abbr, passwordHash: passHash,
-    members: [{ uid: leaderUid, name: leader, id: '#0001', phone: '', role: 'Líder', tags: [], notes: '', warnings: 0, warningReason: '' }],
+    members: [{ uid: leaderUid, name: leader, id: '#0001', phone: '', role: 'Líder', tags: [], notes: '', warnings: 0, warningReason: '', passwordHash: leaderPassHash }],
     meta: null, avisos: [], shopItems: [], orgs: [], times: [], requests: [], createdAt: Date.now()
   };
 
@@ -1976,28 +1997,34 @@ async function doLogin() {
   if (resolved.error) { err.textContent = resolved.error; err.classList.add('show'); return; }
 
   const { id: resolvedId, data: guild } = resolved;
-  const passHash = await hashStr(passInput);
-  if (guild.passwordHash !== passHash) { err.textContent = '🔒 Senha incorreta.'; err.classList.add('show'); return; }
 
   currentGuildKey = resolvedId;
   currentGuild = guild;
 
+  // Find member by name
   const member = guild.members.find(m => m.name.toLowerCase() === nameInput.toLowerCase());
-  if (member) {
-    currentUser = { name: member.name, role: member.role, tags: member.tags || [],
-      isLeader: member.role === 'Líder', isCoLeader: member.role === 'Co-Líder', uid: member.uid };
-    saveSession(); enterApp();
-  } else {
-    // Auto-add as Membro (open guild - leader can change role later)
-    const newMember = { uid: uid(), name: nameInput, id: '#' + String(guild.members.length+1).padStart(4,'0'),
-      phone: '', role: 'Membro', tags: [], notes: '', warnings: 0, warningReason: '' };
-    guild.members.push(newMember);
-    currentGuild = guild;
-    await saveGuild();
-    currentUser = { name: nameInput, role: 'Membro', tags: [], isLeader: false, isCoLeader: false, uid: newMember.uid };
-    saveSession(); enterApp();
-    toast('✅ Bem-vindo(a)! Você foi adicionado(a) como Membro.', 'success');
+
+  if (!member) {
+    err.textContent = '⚔️ Personagem não encontrado. Verifique o nome ou peça ao Líder para criar sua conta.';
+    err.classList.add('show'); return;
   }
+
+  // Check member has a password set
+  if (!member.passwordHash) {
+    err.textContent = '🔒 Sua conta ainda não tem senha. Peça ao Líder para definir uma senha para você.';
+    err.classList.add('show'); return;
+  }
+
+  // Validate member's personal password
+  const passHash = await hashStr(passInput);
+  if (member.passwordHash !== passHash) {
+    err.textContent = '🔒 Senha incorreta. Peça ao Líder sua senha pessoal.';
+    err.classList.add('show'); return;
+  }
+
+  currentUser = { name: member.name, role: member.role, tags: member.tags || [],
+    isLeader: member.role === 'Líder', isCoLeader: member.role === 'Co-Líder', uid: member.uid };
+  saveSession(); enterApp();
 }
 
 function showLogin() {
@@ -2218,6 +2245,7 @@ function renderMembers() {
       <div class="member-details">
         ${m.phone ? `<div class="member-detail-row"><span class="member-detail-label">📱 Cel</span><span class="member-detail-value">${esc(m.phone)}</span></div>` : ''}
         ${m.notes ? `<div class="member-detail-row"><span class="member-detail-label">📝 Obs</span><span class="member-detail-value" style="font-size:12px;">${esc(m.notes)}</span></div>` : ''}
+        <div class="member-detail-row"><span class="member-detail-label">🔑 Senha</span><span class="member-detail-value">${m.passwordHash ? '<span style="color:var(--green);font-size:12px;">✅ Definida</span>' : '<span style="color:var(--red);font-size:12px;">⚠️ Sem senha</span>'}</span></div>
         ${tagsHtml}
         <div class="member-detail-row"><span class="member-detail-label">⚠️ Adv</span><span class="member-detail-value">${warnHtml}</span></div>
       </div>
@@ -2234,6 +2262,19 @@ function showWarningReason(uid_) {
   const text = m.warningReason ? m.warningReason : 'Nenhum motivo especificado.';
   document.getElementById('warningReasonText').textContent = text;
   document.getElementById('warningReasonModal').classList.add('open');
+}
+
+// ============= MEMBER PASSWORD HELPER =============
+function generateMemberPassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let pwd = '';
+  for (let i = 0; i < 8; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+  const field = document.getElementById('mPassword');
+  field.value = pwd;
+  field.type = 'text'; // show it so leader can copy
+  // Copy to clipboard
+  _copyToClipboard(pwd);
+  toast('🎲 Senha gerada e copiada: ' + pwd, 'success');
 }
 
 // ============= MEMBER TAGS =============
@@ -2273,6 +2314,7 @@ function openAddMember() {
   document.getElementById('mRole').value = '';
   document.getElementById('mRoleCustom').value = '';
   document.getElementById('mNotes').value = '';
+  document.getElementById('mPassword').value = '';
   document.getElementById('mWarnings').value = '0';
   document.getElementById('mWarningReason').value = '';
   document.getElementById('mTagInput').value = '';
@@ -2294,6 +2336,10 @@ function openEditMember(uid_) {
   if (knownRoles.includes(m.role)) { document.getElementById('mRole').value = m.role; document.getElementById('mRoleCustom').value = ''; }
   else { document.getElementById('mRole').value = 'Personalizado'; document.getElementById('mRoleCustom').value = m.role; }
   document.getElementById('mNotes').value = m.notes||'';
+  // Show placeholder if password already set, empty if not
+  const pwdField = document.getElementById('mPassword');
+  pwdField.value = '';
+  pwdField.placeholder = m.passwordHash ? '••••••• (deixe vazio para não alterar)' : 'Digite uma senha para este membro';
   document.getElementById('mWarnings').value = m.warnings||0;
   document.getElementById('mWarningReason').value = m.warningReason||'';
   document.getElementById('mTagInput').value = '';
@@ -2313,6 +2359,7 @@ async function saveMember() {
   const warnings = parseInt(document.getElementById('mWarnings').value)||0;
   const warningReason = document.getElementById('mWarningReason').value.trim();
   const tags = [...pendingTags];
+  const passwordRaw = document.getElementById('mPassword').value;
 
   if (!name) { toast('Digite o nome.', 'error'); return; }
   if (!id) { toast('Digite o ID.', 'error'); return; }
@@ -2323,15 +2370,26 @@ async function saveMember() {
   const editId = document.getElementById('editMemberId').value;
   if (!currentGuild.members) currentGuild.members = [];
 
+  // Hash password if provided
+  let passwordHash = null;
+  if (passwordRaw) {
+    passwordHash = await hashStr(passwordRaw);
+  }
+
   if (editId) {
     const idx = currentGuild.members.findIndex(m => m.uid === editId);
-    if (idx !== -1) currentGuild.members[idx] = { ...currentGuild.members[idx], name, id, phone, role, tags, notes, warnings, warningReason };
-    // Refresh currentUser if editing self
+    if (idx !== -1) {
+      const existing = currentGuild.members[idx];
+      // Only update passwordHash if a new password was typed
+      const finalPasswordHash = passwordHash || existing.passwordHash || null;
+      currentGuild.members[idx] = { ...existing, name, id, phone, role, tags, notes, warnings, warningReason, passwordHash: finalPasswordHash };
+    }
     if (editId === currentUser.uid) { currentUser.tags = tags; currentUser.role = role; currentUser.isLeader = role==='Líder'; currentUser.isCoLeader = role==='Co-Líder'; saveSession(); updateSidebarUI(); }
     toast('✅ Membro atualizado!', 'success');
   } else {
+    if (!passwordRaw) { toast('Defina uma senha para o membro.', 'error'); return; }
     if (currentGuild.members.some(m => m.id === id)) { toast('ID já existe.', 'error'); return; }
-    currentGuild.members.push({ uid: uid(), name, id, phone, role, tags, notes, warnings, warningReason });
+    currentGuild.members.push({ uid: uid(), name, id, phone, role, tags, notes, warnings, warningReason, passwordHash });
     toast('✅ Membro adicionado!', 'success');
   }
 

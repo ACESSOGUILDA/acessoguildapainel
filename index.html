@@ -287,22 +287,38 @@ body {
 /* ========== HOME PAGE ========== */
 .home-hero {
   background: linear-gradient(135deg, var(--card) 0%, rgba(200,160,65,0.06) 100%);
-  border: 1px solid var(--border2); border-radius: 14px;
+  border: 1px solid var(--border2); border-radius: 16px;
   padding: 28px 32px; position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
 }
 .home-hero::before {
   content: '⚔️';
-  position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
-  font-size: 80px; opacity: 0.05; pointer-events: none;
+  position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
+  font-size: 100px; opacity: 0.04; pointer-events: none;
+  filter: blur(1px);
 }
-.hero-greeting { font-size: 12px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+.hero-left { flex: 1; min-width: 0; }
+.hero-greeting { font-size: 11px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
 .hero-name { font-family: 'Cinzel', serif; font-size: 32px; font-weight: 900; line-height: 1; margin-bottom: 8px; }
 .hero-name span { color: var(--accent3); }
-.hero-sub { color: var(--text2); font-size: 14px; margin-bottom: 20px; font-style: italic; }
+.hero-sub { color: var(--text2); font-size: 14px; margin-bottom: 22px; font-style: italic; }
 .hero-stats { display: flex; gap: 28px; flex-wrap: wrap; }
 .hero-stat { display: flex; flex-direction: column; gap: 2px; }
 .hero-stat-value { font-family: 'Cinzel', serif; font-size: 26px; font-weight: 700; color: var(--accent3); }
 .hero-stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+.hero-right {
+  display: flex; flex-direction: column; gap: 8px; align-items: flex-end; flex-shrink: 0;
+  border-left: 1px solid var(--border); padding-left: 24px;
+}
+.hero-quick-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(200,160,65,0.1); border: 1px solid rgba(200,160,65,0.25);
+  color: var(--accent3); border-radius: 8px; padding: 8px 16px;
+  font-family: 'Cinzel', serif; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap; letter-spacing: 0.5px;
+  text-decoration: none;
+}
+.hero-quick-btn:hover { background: rgba(200,160,65,0.2); transform: translateX(-2px); }
 
 /* Meta card */
 .meta-card {
@@ -777,60 +793,109 @@ body {
 .save-status-bar.error  { background: rgba(224,64,96,0.15);  color: var(--red); border-top: 1px solid rgba(224,64,96,0.3); }
 .save-status-bar.warn   { background: rgba(243,156,18,0.12); color: #f39c12; border-top: 1px solid rgba(243,156,18,0.3); }
 
-/* ========== RESPONSIVE ========== */
-@media (max-width: 768px) {
-  /* Show hamburger button */
+/* ========== DESKTOP (default, ≥1024px) ========== */
+/* Sidebar always visible, wider content, larger grids */
+.sidebar { width: 260px; min-width: 260px; }
+.page { padding: 28px 32px; gap: 24px; }
+.topbar { padding: 0 28px; height: 56px; }
+.topbar-title { font-size: 17px; }
+
+/* Desktop grids — use more columns */
+.members-grid { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+.shop-grid    { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.orgs-grid    { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.times-grid   { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+.info-grid    { grid-template-columns: repeat(4, 1fr); }
+.themes-grid  { grid-template-columns: repeat(6, 1fr); }
+
+/* Home hero — wider layout */
+.home-hero { padding: 36px 44px; }
+.hero-name  { font-size: 48px; }
+.hero-stats { gap: 36px; }
+.hero-stat-value { font-size: 32px; }
+
+/* Login centered with max width */
+.login-container { width: 480px; max-width: 95vw; }
+
+/* Modals wider on desktop */
+.modal    { max-width: 560px; }
+.modal-lg { max-width: 720px; }
+.modal-sm { max-width: 440px; }
+
+/* Section title bigger */
+.section-title { font-size: 17px; }
+
+/* Content max-width for very wide screens */
+.page-content-wrap { max-width: 1400px; width: 100%; margin-left: auto; margin-right: auto; }
+.home-hero { max-width: 1400px; margin-left: auto; margin-right: auto; }
+
+/* Cart bar positioned past sidebar */
+.cart-bar { left: 260px; }
+
+/* ========== TABLET (768px – 1023px) ========== */
+@media (max-width: 1023px) {
+  .sidebar { width: 220px; min-width: 220px; }
+  .page { padding: 20px 22px; gap: 18px; }
+  .members-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .shop-grid    { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .info-grid    { grid-template-columns: repeat(2, 1fr); }
+  .themes-grid  { grid-template-columns: repeat(3, 1fr); }
+  .home-hero    { padding: 26px 30px; }
+  .hero-name    { font-size: 36px; }
+  .cart-bar     { left: 220px; }
+  .modal-lg     { max-width: 640px; }
+}
+
+/* ========== MOBILE (≤767px) ========== */
+@media (max-width: 767px) {
+  /* Hamburger appears */
   .hamburger-btn { display: block; }
 
-  /* Sidebar becomes a fixed drawer */
+  /* Sidebar slides in as drawer */
   .sidebar {
     position: fixed;
     left: 0; top: 0; bottom: 0;
     transform: translateX(-100%);
     z-index: 201;
-    width: 260px; min-width: 260px;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+    width: 270px; min-width: 270px;
+    box-shadow: 4px 0 32px rgba(0,0,0,0.6);
   }
   .sidebar.open { transform: translateX(0); }
 
-  /* Main fills full width */
   .main { width: 100%; }
+  .page { padding: 14px 16px; gap: 14px; }
+  .topbar { padding: 0 14px; height: 50px; }
+  .topbar-title { font-size: 14px; }
 
-  /* Pages get less padding */
-  .page { padding: 14px; gap: 14px; }
+  .form-row  { grid-template-columns: 1fr; }
+  .members-grid { grid-template-columns: 1fr; }
+  .shop-grid    { grid-template-columns: repeat(2, 1fr); }
+  .orgs-grid    { grid-template-columns: 1fr; }
+  .times-grid   { grid-template-columns: 1fr; }
+  .info-grid    { grid-template-columns: repeat(2, 1fr); }
+  .themes-grid  { grid-template-columns: repeat(3, 1fr); }
 
-  /* Topbar title smaller */
-  .topbar-title { font-size: 13px; }
+  .home-hero  { padding: 18px 20px; flex-direction: column; gap: 16px; }
+  .hero-name  { font-size: 26px; }
+  .hero-stats { gap: 18px; flex-wrap: wrap; }
+  .hero-stat-value { font-size: 22px; }
+  .hero-right { display: none; }
 
-  /* Forms stack */
-  .form-row { grid-template-columns: 1fr !important; }
-
-  /* Members grid single column */
-  .members-grid { grid-template-columns: 1fr !important; }
-  .shop-grid { grid-template-columns: 1fr !important; }
-  .orgs-grid { grid-template-columns: 1fr !important; }
-  .times-grid { grid-template-columns: 1fr !important; }
-  .info-grid { grid-template-columns: repeat(2, 1fr) !important; }
-
-  /* Hero text */
-  .home-hero { padding: 20px; }
-  .hero-name { font-size: 24px; }
-  .hero-stats { gap: 16px; }
-
-  /* Cart bar */
-  .cart-bar { left: 0 !important; flex-wrap: wrap; padding: 10px 14px; gap: 8px; }
-
-  /* Modal */
-  .modal { margin: 10px; max-height: calc(100vh - 20px); }
-
-  /* Meta config card */
+  .cart-bar { left: 0; flex-wrap: wrap; padding: 10px 14px; gap: 8px; }
+  .modal { margin: 8px; max-height: calc(100dvh - 16px); border-radius: 10px; }
+  .modal-lg { max-width: calc(100vw - 16px); }
   .meta-config-card { padding: 16px; }
+  .page > * { max-width: 100%; }
+  .section-title { font-size: 14px; }
 }
 
+/* ========== SMALL MOBILE (≤400px) ========== */
 @media (max-width: 400px) {
-  .info-grid { grid-template-columns: 1fr !important; }
-  .hero-name { font-size: 20px; }
+  .info-grid  { grid-template-columns: 1fr; }
+  .shop-grid  { grid-template-columns: 1fr; }
+  .hero-name  { font-size: 22px; }
   .hero-stats { flex-direction: column; gap: 10px; }
+  .themes-grid{ grid-template-columns: repeat(2, 1fr); }
 }
 
 .divider-ornament {
@@ -1011,28 +1076,37 @@ body {
     <div class="topbar-title" id="topbarTitle">⚔️ Painel</div>
     <div class="topbar-right">
       <div id="topbarActions"></div>
+      <button onclick="refreshCurrentPage()" id="refreshBtn" title="Atualizar dados do servidor" style="background:none;border:1px solid var(--border);color:var(--text3);cursor:pointer;font-size:15px;padding:5px 10px;border-radius:6px;transition:all 0.2s;display:flex;align-items:center;">🔄</button>
     </div>
   </div>
 
   <!-- ======== HOME PAGE ======== -->
   <div class="page active" id="page-home">
     <div class="home-hero">
-      <div class="hero-greeting" id="greetingText">Bem-vindo</div>
-      <div class="hero-name">Olá, <span id="heroUsername">—</span></div>
-      <div class="hero-sub" id="heroGuildSub">Guilda —</div>
-      <div class="hero-stats">
-        <div class="hero-stat">
-          <div class="hero-stat-value" id="statMembers">0</div>
-          <div class="hero-stat-label">Membros</div>
+      <div class="hero-left">
+        <div class="hero-greeting" id="greetingText">Bem-vindo</div>
+        <div class="hero-name">Olá, <span id="heroUsername">—</span></div>
+        <div class="hero-sub" id="heroGuildSub">Guilda —</div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-value" id="statMembers">0</div>
+            <div class="hero-stat-label">Membros</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value" id="statRoles">0</div>
+            <div class="hero-stat-label">Funções</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value" id="statMetaPercent">—</div>
+            <div class="hero-stat-label">Meta</div>
+          </div>
         </div>
-        <div class="hero-stat">
-          <div class="hero-stat-value" id="statRoles">0</div>
-          <div class="hero-stat-label">Funções</div>
-        </div>
-        <div class="hero-stat">
-          <div class="hero-stat-value" id="statMetaPercent">—</div>
-          <div class="hero-stat-label">Meta</div>
-        </div>
+      </div>
+      <div class="hero-right" id="heroQuickActions">
+        <div class="hero-quick-btn" onclick="navigate('membros')">👥 Membros</div>
+        <div class="hero-quick-btn" onclick="navigate('avisos')">📢 Avisos</div>
+        <div class="hero-quick-btn" onclick="navigate('times')">⚔️ Times</div>
+        <div class="hero-quick-btn" onclick="navigate('loja')">🏪 Loja</div>
       </div>
     </div>
 
@@ -2095,6 +2169,27 @@ async function navigate(page) {
     if (fbEl) fbEl.textContent = getFirebaseUrl() || '(não configurado)';
   }
   updateCartBar();
+}
+
+// ============= REFRESH =============
+async function refreshCurrentPage() {
+  const btn = document.getElementById('refreshBtn');
+  if (btn) { btn.style.opacity = '0.4'; btn.style.pointerEvents = 'none'; }
+  await reloadGuild();
+  updateSidebarUI();
+  const activePage = document.querySelector('.page.active');
+  if (activePage) {
+    const page = activePage.id.replace('page-', '');
+    if (page === 'home') renderHome();
+    else if (page === 'membros') renderMembers();
+    else if (page === 'avisos') renderAvisos();
+    else if (page === 'times') renderTimes();
+    else if (page === 'orgs') renderOrgs();
+    else if (page === 'loja') renderShop();
+    else if (page === 'meta') loadMetaForm();
+  }
+  toast('🔄 Dados atualizados!', 'success');
+  if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
 }
 
 // ============= SIDEBAR MOBILE =============
